@@ -1,0 +1,22 @@
+{
+  "name": "mozilla-universal-search-addon",
+  "version": "1.0.0",
+  "description": "universal search desktop experiments in addon format",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mozilla/universal-search-addon"
+  },
+  "author": "",
+  "license": "MPL2",
+  "bugs": {
+    "url": "https://github.com/mozilla/universal-search-addon/issues"
+  },
+  "homepage": "https://github.com/mozilla/universal-search-addon",
+  "dependencies": {
+    "jpm": "^1.0.0"
+  }
+}
