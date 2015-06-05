@@ -20,7 +20,7 @@
       <constructor><![CDATA[
         // grab a reference to the browser and pass it to JS
         this.browserEl = document.getAnonymousElementByAttribute(this, "anonid", "universal-search-iframe");
-        // TODO pass to JS somehow
+        UNIVSEARCH.elements.iframe = this.browserEl;
       ]]></constructor>
 
       <!-- not sure how much to put in the XBL methods,
