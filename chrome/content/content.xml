@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<bindings id="universalSearchBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+  <binding id="autocomplete-rich-result-popup-univ-search" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup" >
+    <!-- TODO: could we just load the CSS with moz-binding here, instead of
+         dynamically appending it? -->
+    <content ignorekeys="false" level="top" consumeoutsideclicks="false">
+      <!-- TODO: 
+           in regular gecko-dev, we had to dynamically set browser.src
+           to avoid the window load event firing before our handler attached.
+           I don't know if that's necessary here, but we'll just see if doing
+           the existing thing works. -->
+      <xul:browser anonid="universal-search-iframe" type="content" height="416" minheight="416" flex="1" />
+    </content>
+
+    <implementation implements="nsIAutoCompletePopup">
+      <constructor><![CDATA[
+        // grab a reference to the browser and pass it to JS
+        this.browserEl = document.getAnonymousElementByAttribute(this, "anonid", "universal-search-iframe");
+        // TODO pass to JS somehow
+      ]]></constructor>
+
+      <!-- not sure how much to put in the XBL methods,
+           leaning on cliqz and autocomplete.xml -->
+      <property name="selectedIndex" onget="return 0;">
+        <setter>
+          <![CDATA[
+            // we don't do anything here, we just need to overwrite the built-in method
+          ]]>
+        </setter>
+      </property>
+      <method name="_invalidate">
+        <body>
+          <![CDATA[
+            this._appendCurrentResult();
+          ]]>
+        </body>
+      </method>
+      <method name="_appendCurrentResult">
+        <body>
+          <![CDATA[
+            // we will set contents via JS in DOM Level 0 style:
+            // MYAPP.popup._appendCurrentResult = some function
+          ]]>
+        </body>
+      </method>
+      <method name="_openAutocompletePopup">
+        <parameter name="aInput">
+        <parameter name="aElement">
+        <body>
+          <![CDATA[
+            if (!this.mPopupOpen) {
+              this.mInput = aInput;
+              this._invalidate();
+
+              // XXX if we want to go full-width again, we would do that here.
+              //     sticking with the built-in width calculation for now.
+              var width = aElement.getBoundingClientRect().width;
+              this.setAttribute("width", width > 100 ? width : 100);
+
+              this.openPopup(aElement, "after_start", 0, 0, false, true);
+            }
+          ]]>
+        </body>
+      </method>
+
+  
+
+
+

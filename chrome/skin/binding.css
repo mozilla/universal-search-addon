@@ -1,0 +1,6 @@
+#PopupAutoCompleteRichResultUnivSearch {
+  /* TODO figure out our addon name so this url will resolve */
+  -moz-binding: url("chrome://the-addon/chrome/content.xml#autocomplete-rich-result-popup-univ-search");
+  /* TODO should we set the height here, or is setting it on the browser el enough? */
+  height: 416px;
+}
