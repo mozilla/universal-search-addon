@@ -56,6 +56,14 @@
           ]]>
         </body>
       </method>
+      <method name="onKeyPress">
+        <parameter name="aEvent">
+        <body>
+          <![CDATA[
+            US.popup.onKeyPress(aEvent);
+          ]]>
+        </body>
+      </method>
 
     </implementation>
   </binding>
