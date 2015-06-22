@@ -57,7 +57,7 @@
         </body>
       </method>
       <method name="onKeyPress">
-        <parameter name="aEvent">
+        <parameter name="aEvent" />
         <body>
           <![CDATA[
             US.popup.onKeyPress(aEvent);
