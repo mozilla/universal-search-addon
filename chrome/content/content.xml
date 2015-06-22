@@ -56,12 +56,11 @@
           ]]>
         </body>
       </method>
-
       <method name="onKeyPress">
         <parameter name="aEvent">
         <body>
           <![CDATA[
-            // override inherited method
+            US.popup.onKeyPress(aEvent);
           ]]>
         </body>
       </method>
