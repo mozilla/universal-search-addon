@@ -1,0 +1,14 @@
+{
+  "name": "fuzzyset.js",
+  "homepage": "https://github.com/Glench/fuzzyset.js",
+  "_release": "372f07bac5",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "372f07bac5a0a8121f720259a89286852446e156"
+  },
+  "_source": "git://github.com/Glench/fuzzyset.js.git",
+  "_target": "*",
+  "_originalSource": "fuzzyset.js",
+  "_direct": true
+}
