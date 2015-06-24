@@ -1,0 +1,25 @@
+env:
+  browser: true
+  es6: true
+  node: true
+
+globals:
+  Cc: false
+  Ci: false
+  Cm: false
+  Components: false
+  CustomizableUI: false
+  Main: false
+  Services: false
+  SearchSuggestionController: false
+  US: false
+  WebChannel: false
+  XPCOMUtils: false
+
+rules:
+  global-strict: 0
+  no-underscore-dangle: 0
+  no-unused-vars: [2, {vars: all, args: none}]
+  quotes: [0, single]
+  strict: 0
+
