@@ -1,6 +1,6 @@
 {
   "name": "mozilla-universal-search-addon",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "universal search desktop experiments in addon format",
   "main": "index.js",
   "scripts": {
