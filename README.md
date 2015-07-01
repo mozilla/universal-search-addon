@@ -13,7 +13,7 @@ Installation / how to hack on this?
 Release process:
   1. Manually bump the version number in `install.rdf` and `update.rdf`.
   1. Bump the version number in package.json using `npm version patch`. This will generate a git tag, too.
-  1. Zip up a new addon: `rm -rf dist && mkdir dist && zip dist/addon.xpi *`
+  1. Zip up a new addon: `rm -rf dist && mkdir dist && zip -r dist/addon.xpi *`
   1. Release the addon to people: `scp dist/addon.xpi jhirsch@people.mozilla.org:public_html/universal-search-addon/addon.xpi`
   1. Release the update.rdf file to people: `scp update.rdf jhirsch@people.mozilla.org:public_html/universal-search-addon/update.rdf`
   1. Probably email the universal-search list?
