@@ -14,9 +14,15 @@ function shutdown(data, reason) {
   // no teardown is needed for a normal shutdown
   if (reason == APP_SHUTDOWN) { return; }
 
-  // TODO: should we instead run Main.unload on abnormal shutdown?
-  var winMediator = Cc['@mozilla.org/appshell/window-mediator;1'].getService(Ci.nsIWindowMediator);
-  winMediator.removeListener(mediatorListener);
+  if (reason == ADDON_DISABLE || reason == ADDON_UNINSTALL) {
+    // uninstall / offboarding experience? ask for feedback?
+    // TODO: xhr the uninstall event to a server
+  }
+
+  // the reason is either disable, uninstall, or shutdown is firing
+  // because we're in the middle of a downgrade/upgrade. In any of
+  // these cases, we want to unload the current code.
+  Main.unload();
 }
 
 function install(data, reason) {
@@ -25,7 +31,4 @@ function install(data, reason) {
 }
 
 function uninstall(data, reason) {
-  // uninstall / offboarding experience? ask for feedback?
-  // TODO: xhr the uninstall event to a server
-  Main.unload();
 }
