@@ -7,10 +7,12 @@ XPCOMUtils.defineLazyModuleGetter(this, 'Main',
   'chrome://universalsearch-lib/content/main.js');
 
 function startup(data, reason) {
+  console.log('bootstrap startup called');
   Main.load();
 }
 
 function shutdown(data, reason) {
+  console.log('bootstrap shutdown called');
   // no teardown is needed for a normal shutdown
   if (reason == APP_SHUTDOWN) { return; }
 
@@ -26,9 +28,11 @@ function shutdown(data, reason) {
 }
 
 function install(data, reason) {
+  console.log('bootstrap install called');
   // upsell? product tour? other first time experience?
   // TODO: xhr the install event to a server
 }
 
 function uninstall(data, reason) {
+  console.log('bootstrap uninstall called');
 }
