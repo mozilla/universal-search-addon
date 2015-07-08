@@ -7,23 +7,32 @@ XPCOMUtils.defineLazyModuleGetter(this, 'Main',
   'chrome://universalsearch-lib/content/main.js');
 
 function startup(data, reason) {
+  console.log('bootstrap startup called');
   Main.load();
 }
 
 function shutdown(data, reason) {
+  console.log('bootstrap shutdown called');
   // no teardown is needed for a normal shutdown
   if (reason == APP_SHUTDOWN) { return; }
 
-  var winMediator = Cc['@mozilla.org/appshell/window-mediator;1'].getService(Ci.nsIWindowMediator);
-  winMediator.removeListener(mediatorListener);
+  if (reason == ADDON_DISABLE || reason == ADDON_UNINSTALL) {
+    // uninstall / offboarding experience? ask for feedback?
+    // TODO: xhr the uninstall event to a server
+  }
+
+  // the reason is either disable, uninstall, or shutdown is firing
+  // because we're in the middle of a downgrade/upgrade. In any of
+  // these cases, we want to unload the current code.
+  Main.unload();
 }
 
 function install(data, reason) {
+  console.log('bootstrap install called');
   // upsell? product tour? other first time experience?
   // TODO: xhr the install event to a server
 }
 
 function uninstall(data, reason) {
-  // uninstall / offboarding experience? ask for feedback?
-  // TODO: xhr the uninstall event to a server
+  console.log('bootstrap uninstall called');
 }

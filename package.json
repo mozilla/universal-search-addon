@@ -1,7 +1,7 @@
 {
   "name": "mozilla-universal-search-addon",
   "description": "universal search desktop experiments in addon format",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Mozilla (https://mozilla.org/)",
   "bugs": {
     "url": "https://github.com/mozilla/universal-search-addon/issues"
@@ -10,7 +10,7 @@
     "jpm": "^1.0.0"
   },
   "devDependencies": {
-    "eslint": "0.23.0"
+    "eslint": "0.24.0"
   },
   "engines": {
     "firefox": ">=38.0a1",
