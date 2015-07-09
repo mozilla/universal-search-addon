@@ -10,7 +10,8 @@
     "jpm": "^1.0.0"
   },
   "devDependencies": {
-    "eslint": "0.24.0"
+    "eslint": "0.24.0",
+    "eslint-config-universal-search": "1.0.0"
   },
   "engines": {
     "firefox": ">=38.0a1",

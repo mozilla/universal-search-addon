@@ -1,5 +1,7 @@
 'use strict';
 
+/* global APP_SHUTDOWN, ADDON_DISABLE, ADDON_UNINSTALL, Components, XPCOMUtils, Main */
+
 const { classes: Cc, interfaces: Ci, utils: Cu, manager: Cm } = Components;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
@@ -14,9 +16,9 @@ function startup(data, reason) {
 function shutdown(data, reason) {
   console.log('bootstrap shutdown called');
   // no teardown is needed for a normal shutdown
-  if (reason == APP_SHUTDOWN) { return; }
+  if (reason === APP_SHUTDOWN) { return; }
 
-  if (reason == ADDON_DISABLE || reason == ADDON_UNINSTALL) {
+  if (reason === ADDON_DISABLE || reason === ADDON_UNINSTALL) {
     // uninstall / offboarding experience? ask for feedback?
     // TODO: xhr the uninstall event to a server
   }
