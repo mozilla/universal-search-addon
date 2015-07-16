@@ -1,26 +1,31 @@
 {
   "name": "mozilla-universal-search-addon",
-  "version": "1.1.0",
   "description": "universal search desktop experiments in addon format",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/mozilla/universal-search-addon"
-  },
-  "author": "",
-  "license": "MPL2",
+  "version": "1.1.0",
+  "author": "Mozilla (https://mozilla.org/)",
   "bugs": {
     "url": "https://github.com/mozilla/universal-search-addon/issues"
   },
-  "homepage": "https://github.com/mozilla/universal-search-addon",
   "dependencies": {
     "jpm": "^1.0.0"
+  },
+  "devDependencies": {
+    "eslint": "0.24.0",
+    "eslint-config-universal-search": "1.0.0"
   },
   "engines": {
     "firefox": ">=38.0a1",
     "fennec": ">=38.0a1"
+  },
+  "homepage": "https://github.com/mozilla/universal-search-addon",
+  "license": "MPL-2.0",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mozilla/universal-search-addon"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
