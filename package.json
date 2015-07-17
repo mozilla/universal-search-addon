@@ -11,7 +11,9 @@
   },
   "devDependencies": {
     "eslint": "0.24.0",
-    "eslint-config-universal-search": "1.0.0"
+    "eslint-config-universal-search": "1.0.0",
+    "mocha": "2.2.5",
+    "sinon": "1.15.4"
   },
   "engines": {
     "firefox": ">=38.0a1",
