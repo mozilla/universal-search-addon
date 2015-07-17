@@ -10,8 +10,13 @@
     "jpm": "^1.0.0"
   },
   "devDependencies": {
-    "eslint": "0.24.0",
-    "eslint-config-universal-search": "1.0.0"
+    "eslint-config-universal-search": "^1.0.0",
+    "grunt": "0.4.5",
+    "grunt-cli": "0.1.13",
+    "grunt-contrib-clean": "0.6.0",
+    "grunt-contrib-compress": "0.13.0",
+    "grunt-contrib-copy": "0.8.0",
+    "grunt-eslint": "16.0.0"
   },
   "engines": {
     "firefox": ">=38.0a1",
@@ -25,7 +30,7 @@
     "url": "https://github.com/mozilla/universal-search-addon"
   },
   "scripts": {
-    "lint": "eslint .",
+    "lint": "grunt lint",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
