@@ -2,6 +2,8 @@
 
 Universal Search desktop experiments in addon format
 
+[![Build Status](https://travis-ci.org/mozilla/universal-search-addon.svg?branch=master)](https://travis-ci.org/mozilla/universal-search-addon)
+
 ## Developer setup
 
 ### Basic addon environment
