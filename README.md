@@ -6,6 +6,8 @@ Universal Search desktop experiments in addon format
 
 ## Developer setup
 
+
+
 ### Basic addon environment
 These steps come from the [extension dev page](https://developer.mozilla.org/en-US/Add-ons/Setting_up_extension_development_environment) on MDN. Look there for lots more detail.
 
@@ -23,16 +25,17 @@ These steps come from the [extension dev page](https://developer.mozilla.org/en-
     - `-purgecaches` stops FF from caching files, so you can instantly (?) see changes
 
 ### Setup specific to this addon
-1. Set up https on your local machine.
-  - Warning: this sucks, but is necessary.
-  - Here's a gist with how I got this working (yosemite / built-in apache): https://gist.github.com/6a68/40b5eda14c82a25e253b
-1. Configure the addon to use your local copy of the [iframe code](https://github.com/mozilla/universal-search-content):
+1. If you're hacking on the [iframe](https://github.com/mozilla/universal-search-content), then configure your profile to use a local copy:
   - Set these two prefs in about:config:
   - `services.universalSearch.frameURL`: the complete iframe URL
     - default is 'https://d1fnkpeapwua2i.cloudfront.net/index.html'
   - `services.universalSearch.baseURL`: the iframe's base URL
     - default is 'https://d1fnkpeapwua2i.cloudfront.net'
-
+1. The first time you use a local iframe, you'll probably be serving it from `https://localhost:8080/`. You will get a security warning, it'll look something like this: ![](https://www.dropbox.com/s/9ieyvpimtfkmqo4/Screenshot%202015-07-21%2014.52.10.png?dl=0&raw=true)
+To work around this:
+  - Surf to the iframe URL (**the enter key won't work**. You will have to click the Go Button, the little right arrow at the edge of the address bar)
+  - Once you load the page, add a security exception for the self-signed cert provided by the local content server.
+1. Restart the browser, and you're in business.
 
 ## Release process:
   1. Manually bump the version number in `src/install.rdf` and `src/update.rdf`.
