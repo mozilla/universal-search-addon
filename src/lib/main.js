@@ -1,3 +1,5 @@
+'use strict';
+
 // TODO: bootstrapped extensions cache strings, scripts, etc forever.
 //       figure out when and how to cache-bust.
 //       bugs 918033, 1051238, 719376
@@ -16,16 +18,16 @@ XPCOMUtils.defineLazyModuleGetter(this, 'console',
 XPCOMUtils.defineLazyModuleGetter(this, 'CustomizableUI',
   'resource:///modules/CustomizableUI.jsm');
 
-var EXPORTED_SYMBOLS = ['Main']; // eslint-disable-line no-unused-vars
+const EXPORTED_SYMBOLS = ['Main']; // eslint-disable-line no-unused-vars
 
-var onTabSelect = function() { console.log('onTabSelect'); };
-var onTabOpen = function() { console.log('onTabOpen'); };
-var onTabClose = function() { console.log('onTabClose'); };
+const onTabSelect = function() { console.log('onTabSelect'); };
+const onTabOpen = function() { console.log('onTabOpen'); };
+const onTabClose = function() { console.log('onTabClose'); };
 
-var loadIntoWindow = function(win) {
+const loadIntoWindow = function(win) {
   console.log('loadIntoWindow start');
 
-  var document = win.document;
+  const document = win.document;
 
   // set the app global per-window
   if (win.US === undefined) {
@@ -35,7 +37,7 @@ var loadIntoWindow = function(win) {
   }
 
   // hide the search bar, if it's visible; this will be null if not
-  var searchBarLocation = CustomizableUI.getPlacementOfWidget('search-container');
+  const searchBarLocation = CustomizableUI.getPlacementOfWidget('search-container');
   if (searchBarLocation) {
     win.US.searchBarLocation = searchBarLocation;
     CustomizableUI.removeWidgetFromArea('search-container');
@@ -49,7 +51,7 @@ var loadIntoWindow = function(win) {
   Services.scriptloader.loadSubScript('chrome://universalsearch-lib/content/ui/GoButton.js', win);
 
   // load the CSS into the document. not using the stylesheet service.
-  var stylesheet = document.createElementNS('http://www.w3.org/1999/xhtml', 'h:link');
+  const stylesheet = document.createElementNS('http://www.w3.org/1999/xhtml', 'h:link');
   stylesheet.rel = 'stylesheet';
   stylesheet.href = 'chrome://universalsearch-root/content/skin/binding.css';
   stylesheet.type = 'text/css';
@@ -85,7 +87,7 @@ var loadIntoWindow = function(win) {
 };
 
 // basically reverse the loadIntoWindow function
-var unloadFromWindow = function(win) {
+const unloadFromWindow = function(win) {
   console.log('unloadFromWindow start');
 
   win.US.goButton.derender(win);
@@ -100,7 +102,7 @@ var unloadFromWindow = function(win) {
 
   // show the search bar, if it was visible originally
   if (win.US.searchBarLocation) {
-    var loc = win.US.searchBarLocation;
+    const loc = win.US.searchBarLocation;
     CustomizableUI.addWidgetToArea('search-container', loc.area, loc.position);
   }
 
@@ -125,9 +127,9 @@ function onWindowNotification(win, topic) {
 }
 
 function load() {
-  var enumerator = Services.wm.getEnumerator('navigator:browser');
+  const enumerator = Services.wm.getEnumerator('navigator:browser');
   while (enumerator.hasMoreElements()) {
-    var win = enumerator.getNext();
+    const win = enumerator.getNext();
     try {
       loadIntoWindow(win);
     } catch (ex) {
@@ -138,9 +140,9 @@ function load() {
 }
 
 function unload() {
-  var enumerator = Services.wm.getEnumerator('navigator:browser');
+  const enumerator = Services.wm.getEnumerator('navigator:browser');
   while (enumerator.hasMoreElements()) {
-    var win = enumerator.getNext();
+    const win = enumerator.getNext();
     try {
       unloadFromWindow(win);
     } catch (ex) {
@@ -150,4 +152,4 @@ function unload() {
   Services.ww.unregisterNotification(onWindowNotification);
 }
 
-var Main = { load: load, unload: unload }; // eslint-disable-line no-unused-vars
+const Main = { load: load, unload: unload }; // eslint-disable-line no-unused-vars

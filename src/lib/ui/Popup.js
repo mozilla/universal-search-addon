@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyModuleGetter(this, 'Promise',
   'resource://gre/modules/Promise.jsm');
 
 function Popup() {
-  var prefBranch = Cc['@mozilla.org/preferences-service;1']
+  const prefBranch = Cc['@mozilla.org/preferences-service;1']
                    .getService(Ci.nsIPrefService)
                    .getBranch('');
   this.frameURL = prefBranch.getPrefType('services.universalSearch.frameURL') ?
@@ -25,13 +25,13 @@ function Popup() {
 Popup.prototype = {
   constructor: Popup,
   render: function(win) {
-    var ns = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
+    const ns = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
     this.popup = win.document.createElementNS(ns, 'panel');
     this.popup.setAttribute('type', 'autocomplete-richlistbox');
     this.popup.setAttribute('id', 'PopupAutoCompleteRichResultUnivSearch');
     this.popup.setAttribute('noautofocus', 'true');
 
-    var oldPopup = win.document.getElementById('PopupAutoCompleteRichResult');
+    const oldPopup = win.document.getElementById('PopupAutoCompleteRichResult');
     this.popupParent = oldPopup.parentElement;
     this.popupParent.appendChild(this.popup);
 
@@ -81,7 +81,7 @@ Popup.prototype = {
     this.browser.messageManager.loadFrameScript('chrome://browser/content/content.js', true);
   },
   handleEvent: function(evt) {
-    var handlers = {
+    const handlers = {
       'popuphiding': this.onPopupHiding,
       'popupshowing': this.onPopupShowing
     };
@@ -107,13 +107,13 @@ Popup.prototype = {
     if (!aURL.endsWith('.ico') && !aURL.endsWith('.ICO')) {
       return aURL;
     }
-    let width = Math.round(aWidth * aWin.devicePixelRatio);
-    let height = Math.round(aHeight * aWin.devicePixelRatio);
+    const width = Math.round(aWidth * aWin.devicePixelRatio);
+    const height = Math.round(aHeight * aWin.devicePixelRatio);
     return aURL + (aURL.contains('#') ? '&' : '#') +
            '-moz-resolution=' + width + ',' + height;
   },
   _appendCurrentResult: function() {
-    var autocompleteResults = this._getAutocompleteSearchResults();
+    const autocompleteResults = this._getAutocompleteSearchResults();
     // TODO: refactor
     this._getSearchSuggestions().then(function(searchSuggestions) {
       window.US.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
@@ -128,19 +128,19 @@ Popup.prototype = {
     });
   },
   _getAutocompleteSearchResults: function() {
-    var controller = this.popup.mInput.controller;
-    var maxResults = 5;
-    var results = [];
+    const controller = this.popup.mInput.controller;
+    const maxResults = 5;
+    let results = [];
 
     // the controller's searchStatus is not a reliable way to decide when/what to send.
     // instead, we'll just check the number of results and act accordingly.
     if (controller.matchCount) {
       results = [];
-      for (var i = 0; i < Math.min(maxResults, controller.matchCount); i++) {
-        var chromeImgLink = this._getImageURLForResolution(window, controller.getImageAt(i), 16, 16);
+      for (let i = 0; i < Math.min(maxResults, controller.matchCount); i++) {
+        const chromeImgLink = this._getImageURLForResolution(window, controller.getImageAt(i), 16, 16);
         // if we have a favicon link, it'll be of the form "moz-anno:favicon:http://link/to/favicon"
         // else, it'll be a chrome:// link to the default favicon img
-        var imgMatches = chromeImgLink.match(/^moz-anno\:favicon\:(.*)/);
+        const imgMatches = chromeImgLink.match(/^moz-anno\:favicon\:(.*)/);
 
         results.push({
           url: Components.classes['@mozilla.org/intl/texttosuburi;1'].
@@ -168,32 +168,32 @@ Popup.prototype = {
     //
     //var suggestionData = { engineName: engine.name, searchString: gURLBar.inputField.value, remoteTimeout: 5000 };
     //ContentSearch._onMessageGetSuggestions(brow.messageManager, suggestionData);
-    var controller = this.popup.mInput.controller;
+    const controller = this.popup.mInput.controller;
 
     // it seems like Services.search.isInitialized is always true?
     if (!Services.search.isInitialized) {
       return;
     }
-    let MAX_LOCAL_SUGGESTIONS = 3;
-    let MAX_SUGGESTIONS = 6;
-    let REMOTE_TIMEOUT = 500; // same timeout as in SearchSuggestionController.jsm
-    let isPrivateBrowsingSession = false; // we don't care about this right now
+    const MAX_LOCAL_SUGGESTIONS = 3;
+    const MAX_SUGGESTIONS = 6;
+    const REMOTE_TIMEOUT = 500; // same timeout as in SearchSuggestionController.jsm
+    const isPrivateBrowsingSession = false; // we don't care about this right now
 
     // searchTerm is the same thing as the 'text' item sent down in each result.
     // maybe that's not a useful place to put the search term...
-    let searchTerm = controller.searchString.trim();
+    const searchTerm = controller.searchString.trim();
 
     // unfortunately, the controller wants to do some UI twiddling.
     // and we don't have any UI to give it. so it barfs.
-    let searchController = new SearchSuggestionController();
-    let engine = Services.search.currentEngine;
-    let ok = SearchSuggestionController.engineOffersSuggestions(engine);
+    const searchController = new SearchSuggestionController();
+    const engine = Services.search.currentEngine;
+    const ok = SearchSuggestionController.engineOffersSuggestions(engine);
 
     searchController.maxLocalResults = ok ? MAX_LOCAL_SUGGESTIONS : MAX_SUGGESTIONS;
     searchController.maxRemoteResults = ok ? MAX_SUGGESTIONS : 0;
     searchController.remoteTimeout = REMOTE_TIMEOUT;
 
-    let suggestions = searchController.fetch(searchTerm, isPrivateBrowsingSession, engine);
+    const suggestions = searchController.fetch(searchTerm, isPrivateBrowsingSession, engine);
     // returns a promise for the formatted results of the search suggestion engine
     return suggestions;
   }

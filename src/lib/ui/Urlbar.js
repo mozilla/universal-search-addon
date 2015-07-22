@@ -64,7 +64,7 @@ Urlbar.prototype = {
       // it's a search suggestion, so:
       // grab the search service, get the URL, navigate to _that_,
       // but show the search term in the urlbar
-      var url = this._getSearchURLForTerm(data.result);
+      const url = this._getSearchURLForTerm(data.result);
       this.navigate(url, data.result);
     }
   },
@@ -94,8 +94,8 @@ Urlbar.prototype = {
     }, 0);
   },
   _getSearchURLForTerm: function(searchTerm) {
-    var engine = Services.search.defaultEngine;
-    var url = engine.getSubmission(searchTerm).uri.spec;
+    const engine = Services.search.defaultEngine;
+    const url = engine.getSubmission(searchTerm).uri.spec;
     return url;
   },
   // If the user is navigating to a search, show the searchTerm, but surf to
@@ -131,12 +131,12 @@ Urlbar.prototype = {
       // Set a timeout to show the search term in the address bar,
       // which cancels any updates queued up that haven't rendered yet.
       // if the user hits 'enter', we'll navigate to the search result page.
-      var url = this._getSearchURLForTerm(data.result);
+      const url = this._getSearchURLForTerm(data.result);
       this.updateUrlbar(url, data.result);
     }
   },
   handleEvent: function(evt) {
-    var handlers = {
+    const handlers = {
       'focus': this.onFocus,
       'blur': this.onBlur,
       'keydown': this.onKeyDown,
@@ -166,7 +166,7 @@ Urlbar.prototype = {
   _escKeys: ['ArrowLeft', 'ArrowRight', 'Escape'],
   _navKeys: ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Tab'],
   _sendNavigationalKey: function(evt) {
-    var data = {
+    const data = {
       key: evt.key,
       shiftKey: evt.shiftKey
     };
