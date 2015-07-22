@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <!-- TODO: use a templating library to auto-generate this file from various config values,
+             rather than hard-coding stuff here and in the addon -->
   <RDF:Description about="urn:mozilla:extension:universal-search-addon@mozilla.com">
     <em:updates>
       <RDF:Seq>
@@ -8,7 +10,7 @@
         <!-- docs suggest one li per version of the addon...what if we just update all to latest? -->
         <RDF:li>
           <RDF:Description>
-            <em:version><%= version %></em:version>
+            <em:version>1.1</em:version>
             <em:targetApplication>
               <RDF:Description>
                 <!-- desktop FF UUID -->

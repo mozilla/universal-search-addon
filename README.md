@@ -38,10 +38,11 @@ To work around this:
 1. Restart the browser, and you're in business.
 
 ## Release process:
+  1. Manually bump the version number in `src/install.rdf` and `src/update.rdf`.
   1. Bump the version number in package.json using `npm version patch`. This will generate a git tag, too.
-  1. Generate the src/install.rdf and src/update.rdf files, and zip up a new addon: `gulp build`.
+  1. Zip up a new addon: `gulp build`.
   1. Release the addon to people: `scp dist/addon.xpi jhirsch@people.mozilla.org:public_html/universal-search-addon/addon.xpi`
-  1. Release the dist/update.rdf file to people: `scp dist/update.rdf jhirsch@people.mozilla.org:public_html/universal-search-addon/update.rdf`
+  1. Release the src/update.rdf file to people: `scp src/update.rdf jhirsch@people.mozilla.org:public_html/universal-search-addon/update.rdf`
   1. Probably email the universal-search list?
 
 ## Useful Snippets
