@@ -15,6 +15,7 @@
     "eslint-config-universal-search": "1.0.0",
     "gulp": "3.9.0",
     "gulp-eslint": "0.15.0",
+    "gulp-template": "3.0.0",
     "gulp-zip": "3.0.2",
     "mocha": "2.2.5",
     "sinon": "1.15.4"
