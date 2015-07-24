@@ -11,7 +11,7 @@
     <em:type>2</em:type>
 
     <em:unpack>false</em:unpack>
-    <em:version>2.0</em:version>
+    <em:version><%= version %></em:version>
     <em:name>Universal Search Addon</em:name>
     <em:description>Universal Search desktop FF experiments in addon format</em:description>
     <em:creator/>
