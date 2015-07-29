@@ -10,7 +10,7 @@
         <!-- docs suggest one li per version of the addon...what if we just update all to latest? -->
         <RDF:li>
           <RDF:Description>
-            <em:version>1.1</em:version>
+            <em:version>2.0</em:version>
             <em:targetApplication>
               <RDF:Description>
                 <!-- desktop FF UUID -->
