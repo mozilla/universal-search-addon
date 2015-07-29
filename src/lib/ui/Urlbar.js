@@ -109,7 +109,7 @@ Urlbar.prototype = {
     clearTimeout(this.urlbarNavigateTimer);
     this.urlbarNavigateTimer = setTimeout(() => {
       this._setUrlbarValue(url, searchTerm);
-      window.gBrowser.loadURI(url);
+      window.US.gURLBar.handleCommand(url);
     }, 0);
   },
   onURLSelected: function(data) {
