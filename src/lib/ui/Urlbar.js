@@ -120,6 +120,12 @@ Urlbar.prototype = {
     if (data.resultType === 'url') {
       // The user selected a URL.
       this.updateUrlbar(data.result);
+    } else if (data.resultType === 'empty') {
+      // An Enter was pressed with the popup open, but nothing was selected, so
+      // navigate to whatever's in the urlbar.
+      // Set a dummy timer to avoid later nav-keys preventing the navigation.
+      this.urlbarNavigateTimer = setTimeout(() => {});
+      window.US.gURLBar.handleCommand();
     } else {
       // The user selected a search suggestion.
       // Set a timeout to show the search term in the address bar,
@@ -158,7 +164,14 @@ Urlbar.prototype = {
     }, 0);
   },
   _escKeys: ['ArrowLeft', 'ArrowRight', 'Escape'],
-  _navKeys: ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Tab', 'Enter'],
+  _navKeys: ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Tab'],
+  _sendNavigationalKey: function(evt) {
+    var data = {
+      key: evt.key,
+      shiftKey: evt.shiftKey
+    };
+    window.US.broker.publish('urlbar::navigationalKey', data);
+  },
   onKeyDown: function(evt) {
     if (evt.key === 'Backspace') {
       // Backspace only closes the popup if the urlbar has been emptied out.
@@ -170,18 +183,16 @@ Urlbar.prototype = {
       // Special keys (Ctrl, Alt, Meta) could mean the user is entering a
       // hotkey combination, so, we close the popup in those cases, too.
       window.US.popup.popup.closePopup();
+    } else if (evt.key === 'Enter') {
+      // Only handle the Enter key if the popup is open or about to open
+      if (window.US.popup.popup.state === 'open' || window.US.popup.popup.state === 'showing') {
+        evt.preventDefault();
+        this._sendNavigationalKey(evt);
+      }
     } else if (this._navKeys.indexOf(evt.key) > -1) {
       // For other navigational keys, notify the iframe that the keyboard focus
-      // needs to be adjusted. In the case of 'Enter', we need to wait for the
-      // iframe to tell us which item is selected when that Enter hits. We also
-      // need to cancel the default behavior, which will navigate to whatever
-      // is currently in the urlbar.
-      evt.preventDefault();
-      var data = {
-        key: evt.key,
-        shiftKey: evt.shiftKey
-      };
-      window.US.broker.publish('urlbar::navigationalKey', data);
+      // needs to be adjusted.
+      this._sendNavigationalKey(evt);
     }
   },
   onFocus: function(evt) {},
