@@ -67,7 +67,7 @@ Transport.prototype = {
   // more understandable or readable code than what we've got here. :-\
   onAutocompleteSearchResults: function(msg) {
     var currentInput = msg && msg.length && msg[0].text;
-    if (currentInput && currentInput == this._lastAutocompleteSearchTerm) {
+    if (currentInput && currentInput === this._lastAutocompleteSearchTerm) {
       return;
     }
     this._lastAutocompleteSearchTerm = currentInput;
@@ -75,7 +75,7 @@ Transport.prototype = {
   },
   onSuggestedSearchResults: function(msg) {
     var currentInput = msg && msg.term;
-    if (currentInput && currentInput == this._lastSuggestedSearchTerm) {
+    if (currentInput && currentInput === this._lastSuggestedSearchTerm) {
       return;
     }
     this._lastSuggestedSearchTerm = currentInput;
