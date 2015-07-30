@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/mozilla/universal-search-addon.png?label=ready&title=Ready)](https://waffle.io/mozilla/universal-search-addon)
 # universal-search-addon
 
 Universal Search desktop experiments in addon format
