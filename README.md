@@ -42,6 +42,8 @@ To work around this:
     - `npm run release-minor`: Bumps the package.json `version` minor version number.
     - `npm run release-patch`: Bumps the package.json `version` patch version number. 
     - `npm run release`: Alias for `npm run release-patch`.
+  1. Commit the `src/*.rdf` changes and push to master.
+  1. If a content release is connected with the addon release, push the content changes and wait till CloudFront invalidation is complete (~15 minutes) before continuing.
   1. Release the addon to people: `scp dist/addon.xpi jhirsch@people.mozilla.org:public_html/universal-search-addon/addon.xpi`
   1. Release the dist/update.rdf file to people: `scp dist/update.rdf jhirsch@people.mozilla.org:public_html/universal-search-addon/update.rdf`
   1. Probably email the universal-search list?
