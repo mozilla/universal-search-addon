@@ -3,8 +3,8 @@ const fs = require('fs');
 const del = require('del');
 const eslint = require('gulp-eslint');
 const gulp = require('gulp');
-const zip = require('gulp-zip');
 const template = require('gulp-template');
+const zip = require('gulp-zip');
 
 const pkgVersion = require('./package.json').version;
 
@@ -25,10 +25,6 @@ gulp.task('eslint', function () {
     .pipe(eslint())
     .pipe(eslint.failOnError());
 });
-
-gulp.task('lint', ['eslint']);
-
-gulp.task('default', ['lint']);
 
 gulp.task('gen-prefs', function(cb){
   var contents = '// Set prefs to use a local content server\n'; // eslint-disable-line
