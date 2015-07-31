@@ -14,6 +14,7 @@
     "eslint-config-universal-search": "1.0.0",
     "gulp": "3.9.0",
     "gulp-eslint": "0.15.0",
+    "gulp-template": "3.0.0",
     "gulp-zip": "3.0.2",
     "husky": "0.9.1",
     "mocha": "2.2.5",
@@ -28,12 +29,17 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mozilla/universal-search-addon"
+    "url": "git+https://github.com/mozilla/universal-search-addon.git"
   },
   "scripts": {
     "build": "gulp build",
     "lint": "gulp lint",
     "prepush": "npm run lint",
+    "postversion": "npm run build",
+    "release": "npm run release-patch",
+    "release-major": "npm version major",
+    "release-minor": "npm version minor",
+    "release-patch": "npm version patch",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
