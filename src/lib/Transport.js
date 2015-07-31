@@ -18,13 +18,14 @@ function Transport() {
                         prefBranch.getCharPref('services.universalSearch.baseURL') :
                         'https://d1fnkpeapwua2i.cloudfront.net';
   this.port = null;
+  // channelId must be unique to each window (#64)
+  this.channelId = 'ohai-' + Math.floor(Math.random() * 100000);
   this._lastAutocompleteSearchTerm = '';
   this._lastSuggestedSearchTerm = '';
 }
 
 Transport.prototype = {
   constructor: Transport,
-  channelID: 'ohai',
   init: function() {
     // intentionally alphabetized
     window.US.broker.subscribe('popup::autocompleteSearchResults',
@@ -36,7 +37,7 @@ Transport.prototype = {
     window.US.broker.subscribe('urlbar::navigationalKey',
                                this.onNavigationalKey, this);
 
-    this.port = new WebChannel(this.channelID,
+    this.port = new WebChannel(this.channelId,
                                Services.io.newURI(this.frameBaseURL, null, null));
     this.port.listen(this.onContentMessage.bind(this));
   },
@@ -55,7 +56,7 @@ Transport.prototype = {
                                  this.onNavigationalKey, this);
   },
   onContentMessage: function(id, msg, sender) {
-    if (id !== this.channelID) { return; }
+    if (id !== this.channelId) { return; }
     window.US.broker.publish('iframe::' + msg.type, msg.data);
   },
   // Dedupe sequential messages if the user input hasn't changed. See #18 and
