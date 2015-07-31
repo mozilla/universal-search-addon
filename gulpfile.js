@@ -25,7 +25,7 @@ gulp.task('lint', ['eslint']);
 gulp.task('default', ['lint']);
 
 gulp.task('gen-prefs', function(cb){
-  var contents = '// Set prefs to use a local content server\n';
+  var contents = '// Set prefs to use a local content server\n'; // eslint-disable-line
   contents += 'user_pref("services.universalSearch.frameURL", "https://localhost:8080/index.html");\n';
   contents += 'user_pref("services.universalSearch.baseURL", "https://localhost:8080/");\n';
   contents += '\n// Set prefs using remote content server\n';

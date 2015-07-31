@@ -15,7 +15,7 @@
 //   Exception: the old iframe API event names are dashed, so the corresponding
 //   "iframe::" events are, too: "iframe::url-selected". TODO: unify.
 
-var Broker; // eslint-disable-line no-unused-vars
+let Broker; // eslint-disable-line no-unused-vars
 
 Broker = {
   _subscribers: {},
@@ -39,7 +39,7 @@ Broker = {
       this._subscribers[evt] = [];
     }
 
-    var exists;
+    let exists;
     this._subscribers[evt].forEach(function(subscriber) {
       if (subscriber.cb === cb && subscriber.thisArg === thisArg) {
         exists = true;
@@ -71,8 +71,8 @@ Broker = {
   // the first arg is stripped off, and the remaining arguments will be passed
   // to subscribers
   publish: function() {
-    var evt = arguments[0];
-    var args = Array.prototype.slice.call(arguments, 1);
+    const evt = arguments[0];
+    const args = Array.prototype.slice.call(arguments, 1);
     if (!this._isValidEvent(evt)) {
       throw new TypeError('called publish with invalid event name ' + evt);
     }
