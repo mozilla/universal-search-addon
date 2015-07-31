@@ -26,7 +26,6 @@
   },
   "homepage": "https://github.com/mozilla/universal-search-addon",
   "license": "MPL-2.0",
-  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mozilla/universal-search-addon.git"
