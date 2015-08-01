@@ -20,7 +20,6 @@ function Popup() {
 
   // setting isPinned to true will force the popup to stay open forever
   this.isPinned = false;
-  this.browser = null;
 }
 Popup.prototype = {
   constructor: Popup,
@@ -45,15 +44,20 @@ Popup.prototype = {
     this.popup.addEventListener('popuphiding', this);
     this.popup.addEventListener('popupshowing', this);
 
-    // XXX: We aren't really initialized yet. We wait to set up the WebChannel
-    //      until the browser element loads. It's an anonymous XUL node, so we
-    //      wait until our XBL constructor is called, and it passes us the node.
     window.US.broker.subscribe('iframe::autocomplete-url-clicked',
                                this.onAutocompleteURLClicked, this);
+
+    // XXX: The browser element is an anonymous XUL element created by XBL at
+    //      an unpredictable time in the startup flow. We have to wait for the
+    //      XBL constructor to set a pointer to the element. After that, we can
+    //      set the 'src' on the browser element to point at our iframe. Once
+    //      the iframe page loads, we can initialize a WebChannel and start
+    //      communication.
+    this.waitForBrowser();
   },
   derender: function(win) {
     // remove the load listener, in case uninstall happens before onBrowserLoaded fires
-    this.browser.removeEventListener('load', this.onBrowserLoaded, true);
+    window.US.browser.removeEventListener('load', this.onBrowserLoaded, true);
     this.popupParent.removeChild(this.popup);
 
     this.popup.removeEventListener('popuphiding', this);
@@ -63,22 +67,22 @@ Popup.prototype = {
     window.US.broker.unsubscribe('iframe::autocomplete-url-clicked',
                                  this.onAutocompleteURLClicked, this);
   },
-  // Set the iframe src and wire up ready listener that will attach the WebChannel.
-  // Invoked by the XBL constructor, which passes in the anonymous browser element.
-  //
-  // XXX It's not clear exactly when XBL constructors run, so this code only runs
-  // if the browserEl's src attribute has not been set. Hopefully this avoids leaks.
-  setBrowser: function(browserEl) {
-    this.browser = window.US.browser = browserEl;
-    if (this.browser.getAttribute('src')) { return; }
-    this.browser.addEventListener('load', this.onBrowserLoaded, true);
-    this.browser.setAttribute('src', this.frameURL + '?cachebust=' + Date.now());
+  waitForBrowser: function() {
+    if (this.browserInitialized) { return; }
+    if ('browser' in window.US) {
+      this.browserInitialized = true;
+      // TODO: instead of waiting for load event, use an nsIWebProgressListener
+      window.US.browser.addEventListener('load', this.onBrowserLoaded, true);
+      window.US.browser.setAttribute('src', this.frameURL + '?cachebust=' + Date.now());
+      return;
+    }
+    setTimeout(this.waitForBrowser.bind(this), 0);
   },
   // when the iframe is ready, load up the WebChannel by injecting the content.js script
   onBrowserLoaded: function() {
     console.log('Popup: onBrowserLoaded fired');
-    this.browser.removeEventListener('load', this.onBrowserLoaded, true);
-    this.browser.messageManager.loadFrameScript('chrome://browser/content/content.js', true);
+    window.US.browser.removeEventListener('load', this.onBrowserLoaded, true);
+    window.US.browser.messageManager.loadFrameScript('chrome://browser/content/content.js', true);
   },
   handleEvent: function(evt) {
     const handlers = {
