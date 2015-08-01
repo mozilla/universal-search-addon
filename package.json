@@ -1,7 +1,7 @@
 {
   "name": "mozilla-universal-search-addon",
   "description": "universal search desktop experiments in addon format",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "author": "Mozilla (https://mozilla.org/)",
   "bugs": {
     "url": "https://github.com/mozilla/universal-search-addon/issues"
