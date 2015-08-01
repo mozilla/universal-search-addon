@@ -11,9 +11,9 @@
   },
   "devDependencies": {
     "del": "1.2.0",
-    "eslint-config-universal-search": "1.0.0",
+    "eslint-config-universal-search": "2.0.0",
     "gulp": "3.9.0",
-    "gulp-eslint": "0.15.0",
+    "gulp-eslint": "1.0.0",
     "gulp-template": "3.0.0",
     "gulp-zip": "3.0.2",
     "husky": "0.9.1",
