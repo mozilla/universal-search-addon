@@ -1,9 +1,9 @@
-[![Stories in Ready](https://badge.waffle.io/mozilla/universal-search-addon.png?label=ready&title=Ready)](https://waffle.io/mozilla/universal-search-addon)
 # universal-search-addon
 
 Universal Search desktop experiments in addon format
 
 [![Build Status](https://travis-ci.org/mozilla/universal-search-addon.svg?branch=master)](https://travis-ci.org/mozilla/universal-search-addon)
+[![Stories in Ready](https://badge.waffle.io/mozilla/universal-search-addon.png?label=ready&title=Ready)](https://waffle.io/mozilla/universal-search-addon)
 
 ## Developer setup
 
@@ -37,10 +37,10 @@ To work around this:
 1. Restart the browser, and you're in business.
 
 ## Release process:
-  1. Bump the package.json version number and create an XPI using one of the following commands:
+  1. Use one of the following commands to bump the package.json version number and create an XPI:
     - `npm run release-major`: Bumps the package.json `version` major version number.
     - `npm run release-minor`: Bumps the package.json `version` minor version number.
-    - `npm run release-patch`: Bumps the package.json `version` patch version number. 
+    - `npm run release-patch`: Bumps the package.json `version` patch version number.
     - `npm run release`: Alias for `npm run release-patch`.
   1. Commit the `src/*.rdf` changes and push to master.
   1. If a content release is connected with the addon release, push the content changes and wait till CloudFront invalidation is complete (~15 minutes) before continuing.
