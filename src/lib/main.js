@@ -78,12 +78,6 @@ const loadIntoWindow = function(win) {
   // that appears when you type in the urlbar)
   win.US.goButton = new win.GoButton();
   win.US.goButton.render(win);
-
-  // we call this function when the XBL loads, so we can get a pointer to the
-  // anonymous browser element.
-  win.US.setBrowser = function(browserEl) {
-    win.US.browser = browserEl;
-  };
 };
 
 // basically reverse the loadIntoWindow function

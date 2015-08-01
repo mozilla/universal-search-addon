@@ -12,9 +12,10 @@
     <implementation>
        <constructor>
         <![CDATA[
+          // JS cannot access XBL-created anonymous elements, so we have to
+          // pass the element pointer in this way
           this.browser = document.getAnonymousElementByAttribute(this, 'anonid', 'infect-and-destroy');
-          // TODO: do we really need to do this?
-          US.popup.setBrowser(this.browser);
+          US.browser = this.browser;
         ]]>
       </constructor>
       <property name="selectedIndex"
