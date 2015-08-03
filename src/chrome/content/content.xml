@@ -6,7 +6,7 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
   <binding id="autocomplete-rich-result-popup-univ-search" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup">
     <content ignorekeys="false" level="top" consumeoutsideclicks="false">
-      <xul:browser anonid="infect-and-destroy" type="content" height="416" minheight="416" flex="1" />
+      <xul:browser anonid="infect-and-destroy" type="content" height="366" minheight="366" flex="1" />
     </content>
 
     <implementation>
