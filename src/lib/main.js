@@ -48,7 +48,6 @@ const loadIntoWindow = function(win) {
   Services.scriptloader.loadSubScript('chrome://universalsearch-lib/content/Transport.js', win);
   Services.scriptloader.loadSubScript('chrome://universalsearch-lib/content/ui/Popup.js', win);
   Services.scriptloader.loadSubScript('chrome://universalsearch-lib/content/ui/Urlbar.js', win);
-  Services.scriptloader.loadSubScript('chrome://universalsearch-lib/content/ui/GoButton.js', win);
 
   // load the CSS into the document. not using the stylesheet service.
   const stylesheet = document.createElementNS('http://www.w3.org/1999/xhtml', 'h:link');
@@ -74,10 +73,6 @@ const loadIntoWindow = function(win) {
   win.gBrowser.tabContainer.addEventListener('TabOpen', onTabOpen);
   win.gBrowser.tabContainer.addEventListener('TabClose', onTabClose);
 
-  // TODO: do something more substantial with the "go button" (right arrow
-  // that appears when you type in the urlbar)
-  win.US.goButton = new win.GoButton();
-  win.US.goButton.render(win);
 };
 
 // basically reverse the loadIntoWindow function
