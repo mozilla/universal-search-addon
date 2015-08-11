@@ -76,7 +76,7 @@ Popup.prototype = {
       window.US.browser.setAttribute('src', this.frameURL + '?cachebust=' + Date.now());
       return;
     }
-    setTimeout(this.waitForBrowser.bind(this), 0);
+    setTimeout(() => this.waitForBrowser(), 0);
   },
   // when the iframe is ready, load up the WebChannel by injecting the content.js script
   onBrowserLoaded: function() {
