@@ -2,13 +2,13 @@
 
 'use strict';
 
-/* global Cc, Ci, Cu, Components, SearchSuggestionController, Services,
-   XPCOMUtils */
+/* global Cc, Ci, Cu, Components, PrivateBrowsingUtils,
+   SearchSuggestionController, Services, XPCOMUtils */
 
+XPCOMUtils.defineLazyModuleGetter(this, 'PrivateBrowsingUtils',
+  'resource://gre/modules/PrivateBrowsingUtils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'SearchSuggestionController',
   'resource://gre/modules/SearchSuggestionController.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Promise',
-  'resource://gre/modules/Promise.jsm');
 
 function Popup() {
   const prefBranch = Cc['@mozilla.org/preferences-service;1']
@@ -20,6 +20,8 @@ function Popup() {
 
   // setting isPinned to true will force the popup to stay open forever
   this.isPinned = false;
+
+  this.inPrivateContext = PrivateBrowsingUtils.isWindowPrivate(window);
 }
 Popup.prototype = {
   constructor: Popup,
@@ -116,20 +118,25 @@ Popup.prototype = {
     return aURL + (aURL.contains('#') ? '&' : '#') +
            '-moz-resolution=' + width + ',' + height;
   },
+  // TODO: use UnifiedComplete instead of calling these services separately (#114)
   _appendCurrentResult: function() {
     const autocompleteResults = this._getAutocompleteSearchResults();
-    // TODO: refactor
-    this._getSearchSuggestions().then(function(searchSuggestions) {
-      window.US.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
-
-      delete searchSuggestions.formHistoryResult;
-      window.US.broker.publish('popup::suggestedSearchResults',
-                               searchSuggestions);
-    }, function(err) {
-      Cu.reportError(err);
+    if (this.inPrivateContext) {
       window.US.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
       window.US.broker.publish('popup::suggestedSearchResults', []);
-    });
+    } else {
+      this._getSearchSuggestions().then(function(searchSuggestions) {
+        window.US.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
+
+        delete searchSuggestions.formHistoryResult;
+        window.US.broker.publish('popup::suggestedSearchResults',
+                                 searchSuggestions);
+      }, function(err) {
+        Cu.reportError(err);
+        window.US.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
+        window.US.broker.publish('popup::suggestedSearchResults', []);
+      });
+    }
   },
   _getAutocompleteSearchResults: function() {
     const controller = this.popup.mInput.controller;
@@ -160,18 +167,6 @@ Popup.prototype = {
     return results;
   },
   _getSearchSuggestions: function() {
-    //
-    // now, we also want to include the search suggestions in the output, via some separate signal.
-    // a lot of this code lifted from browser/modules/AboutHome.jsm and browser/modules/ContentSearch.jsm
-    // ( face-with-open-mouth-and-cold-sweat-emoji ), heh
-    //
-    // TODO: maybe just send signals to ContentSearch instead, the problem there is that I couldn't
-    // figure out which message manager to pass into ContentSearch, in order to get the response message back.
-    // it's possible all of this code was unnecessary and we could just fire a GetSuggestions message into
-    // the ether, and fully expect to get a Suggestions object back with the suggestions. /me shrugs
-    //
-    //var suggestionData = { engineName: engine.name, searchString: gURLBar.inputField.value, remoteTimeout: 5000 };
-    //ContentSearch._onMessageGetSuggestions(brow.messageManager, suggestionData);
     const controller = this.popup.mInput.controller;
 
     // it seems like Services.search.isInitialized is always true?
@@ -181,7 +176,6 @@ Popup.prototype = {
     const MAX_LOCAL_SUGGESTIONS = 3;
     const MAX_SUGGESTIONS = 6;
     const REMOTE_TIMEOUT = 500; // same timeout as in SearchSuggestionController.jsm
-    const isPrivateBrowsingSession = false; // we don't care about this right now
 
     // searchTerm is the same thing as the 'text' item sent down in each result.
     // maybe that's not a useful place to put the search term...
@@ -197,7 +191,7 @@ Popup.prototype = {
     searchController.maxRemoteResults = ok ? MAX_SUGGESTIONS : 0;
     searchController.remoteTimeout = REMOTE_TIMEOUT;
 
-    const suggestions = searchController.fetch(searchTerm, isPrivateBrowsingSession, engine);
+    const suggestions = searchController.fetch(searchTerm, this.inPrivateContext, engine);
     // returns a promise for the formatted results of the search suggestion engine
     return suggestions;
   }
