@@ -10,6 +10,7 @@ For each of these events, the general packet format is `{ type, data }`, where `
     * [`suggested-search-results`](#suggested-search-results)
   * UI events
     * [`navigational-key`](#navigational-key)
+    * [`printable-key`](#printable-key)
     * [`popupopen`](#popupopen)
     * [`popupclose`](#popupclose)
 * Content to Addon
@@ -79,6 +80,20 @@ Use `shiftKey` to decide if a `Tab` key corresponds to a shift-Tab or a Tab.
   key: event.key value for the key event, one of 'Tab', 'PageUp', 'PageDown',
        'ArrowUp', 'ArrowDown', 'Enter'
   shiftKey: true if the shift key is pressed
+}
+```
+
+### `printable-key`
+
+This event is sent when the user types a printable key (that is, a non-navigational key) in the address bar, or when the user hits Backspace (to update the iframe-delivered suggestion).
+
+This event allows the iframe to use additional servers to generate suggested results.
+
+It might be a bit of a misleading event name, since what we actually care about is sending over the contents of the urlbar. For instance, if the user inserted a character in the middle of a word in the urlbar, or if the user deletes a character in the middle of a phrase, it's much simpler to send over the new contents, than to send the change event with a position into the string.
+
+```
+{
+  query: current contents of the urlbar
 }
 ```
 
