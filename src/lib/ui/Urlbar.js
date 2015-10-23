@@ -2,7 +2,11 @@
 
 'use strict';
 
-/* global Services */
+/* global PrivateBrowsingUtils, Services, XPCOMUtils */
+
+XPCOMUtils.defineLazyModuleGetter(this, 'PrivateBrowsingUtils',
+  'resource://gre/modules/PrivateBrowsingUtils.jsm');
+
 
 function Urlbar() {
   this.urlbarUpdateTimer = null;
@@ -172,12 +176,26 @@ Urlbar.prototype = {
     };
     window.US.broker.publish('urlbar::navigationalKey', data);
   },
+  _sendPrintableKey: function() {
+    // Wait a turn to reliably get the updated urlbar contents.
+    setTimeout(() => {
+      const data = {
+        query: window.US.gURLBar.value
+      };
+      window.US.broker.publish('urlbar::printableKey', data);
+    });
+  },
   onKeyDown: function(evt) {
     if (evt.key === 'Backspace') {
       // Backspace only closes the popup if the urlbar has been emptied out.
       // We don't know if the urlbar has handled the backspace yet, so wait
       // a turn, and if the urlbar's indeed empty, close the popup.
       this._delayedCloseIfEmpty();
+
+      // If the user deleted in the middle of a string, we might want to send
+      // the updated urlbar contents to the iframe. If the iframe closes while
+      // we're fetching the updated string, that's fine.
+      this._sendPrintableKey();
     } else if (evt.ctrlKey || evt.altKey || evt.metaKey || this._escKeys.indexOf(evt.key) > -1) {
       // ArrowLeft, ArrowRight, and Escape all cause the popup to close.
       // Special keys (Ctrl, Alt, Meta) could mean the user is entering a
@@ -193,6 +211,17 @@ Urlbar.prototype = {
       // For other navigational keys, notify the iframe that the keyboard focus
       // needs to be adjusted.
       this._sendNavigationalKey(evt);
+    } else if (evt.key.length === 1
+               && !PrivateBrowsingUtils.isWindowPrivate(window)) {
+      // Send printable, non-navigational keys to the iframe.
+      // TODO: I'm not sure of the best way to ensure we have a printable key,
+      // filed as issue #118. Our en-US centric hack: if the evt.key value is
+      // longer than one char, it must be something weird, like 'Shift',
+      // 'Equals', 'F1', 'Unidentified', and so on (le sigh).
+      // If modifier keys are pressed, it's probably some kind of shortcut,
+      // and the popup will close anyway.
+      // Don't send keys if the user's in private browsing mode.
+      this._sendPrintableKey();
     }
   },
   onFocus: function(evt) {},

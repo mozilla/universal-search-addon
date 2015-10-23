@@ -36,6 +36,8 @@ Transport.prototype = {
                                this.onSuggestedSearchResults, this);
     window.US.broker.subscribe('urlbar::navigationalKey',
                                this.onNavigationalKey, this);
+    window.US.broker.subscribe('urlbar::printableKey',
+                               this.onPrintableKey, this);
 
     this.port = new WebChannel(this.channelId,
                                Services.io.newURI(this.frameBaseURL, null, null));
@@ -54,6 +56,8 @@ Transport.prototype = {
                                  this.onSuggestedSearchResults, this);
     window.US.broker.unsubscribe('urlbar::navigationalKey',
                                  this.onNavigationalKey, this);
+    window.US.broker.unsubscribe('urlbar::printableKey',
+                               this.onPrintableKey, this);
   },
   onContentMessage: function(id, msg, sender) {
     if (id !== this.channelId) { return; }
@@ -84,6 +88,9 @@ Transport.prototype = {
   },
   onNavigationalKey: function(msg) {
     this.sendMessage('navigational-key', msg);
+  },
+  onPrintableKey: function(msg) {
+    this.sendMessage('printable-key', msg);
   },
   onPopupOpen: function(msg) {
     this.sendMessage('popupopen');
