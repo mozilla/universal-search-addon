@@ -180,7 +180,7 @@ Urlbar.prototype = {
     // Wait a turn to reliably get the updated urlbar contents.
     setTimeout(() => {
       const data = {
-        query: window.US.gURLBar.value
+        query: window.gBrowser.userTypedValue
       };
       window.US.broker.publish('urlbar::printableKey', data);
     });
