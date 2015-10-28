@@ -15,6 +15,10 @@ These steps come from the [extension dev page](https://developer.mozilla.org/en-
 1. Make some changes to your Firefox profile, or create a separate profile.
   - It's nice to create a separate addon profile, but not necessary.
   - In either case, there are some prefs used for addon development; you can easily add them by installing the [devprefs addon](https://addons.mozilla.org/en-US/firefox/addon/devprefs/).
+  - Note: the extension signing requirement is not yet handled by the devprefs addon, so you must:
+    - open the `about:config` page
+    - search for `xpinstall.signatures.required`
+    - toggle it to `false`
 1. Create a proxy file to link your local addon code to your addon profile.
   - The proxy file is just a file inside your addon profile's `extensions` directory, where the file name matches the addon's name (in our case, `universal-search-addon@mozilla.com`), and the file contains the absolute path to the code, with a trailing slash.
   - Example:
