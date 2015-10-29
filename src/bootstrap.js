@@ -1,8 +1,9 @@
 'use strict';
 
-/* global APP_SHUTDOWN, ADDON_DISABLE, ADDON_UNINSTALL, Components, XPCOMUtils, Main */
+/* global APP_SHUTDOWN, ADDON_DISABLE, ADDON_UNINSTALL, Components, Main,
+          XPCOMUtils */
 
-const { utils: Cu } = Components;
+const {utils: Cu} = Components;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'Main',
@@ -27,6 +28,7 @@ function shutdown(data, reason) { // eslint-disable-line no-unused-vars
   // because we're in the middle of a downgrade/upgrade. In any of
   // these cases, we want to unload the current code.
   Main.unload();
+  Cu.unload('chrome://universalsearch-lib/content/main.js');
 }
 
 function install(data, reason) { // eslint-disable-line no-unused-vars
