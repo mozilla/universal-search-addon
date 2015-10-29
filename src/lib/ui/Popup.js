@@ -2,15 +2,31 @@
 
 'use strict';
 
-/* global Cc, Ci, Cu, Components, PrivateBrowsingUtils,
-   SearchSuggestionController, Services, XPCOMUtils */
+/* global Components, PrivateBrowsingUtils, SearchSuggestionController,
+          Services, XPCOMUtils */
 
+const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
+
+const EXPORTED_SYMBOLS = ['Popup']; // eslint-disable-line no-unused-vars
+
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'Services',
+  'resource://gre/modules/Services.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'PrivateBrowsingUtils',
   'resource://gre/modules/PrivateBrowsingUtils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'SearchSuggestionController',
   'resource://gre/modules/SearchSuggestionController.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'console',
+  'resource://gre/modules/devtools/Console.jsm');
 
-function Popup() {
+// module globals
+let win;
+let app;
+
+function Popup(window, appGlobal) {
+  win = window;
+  app = appGlobal;
+
   const prefBranch = Cc['@mozilla.org/preferences-service;1']
                    .getService(Ci.nsIPrefService)
                    .getBranch('');
@@ -21,11 +37,11 @@ function Popup() {
   // setting isPinned to true will force the popup to stay open forever
   this.isPinned = false;
 
-  this.inPrivateContext = PrivateBrowsingUtils.isWindowPrivate(window);
+  this.inPrivateContext = PrivateBrowsingUtils.isWindowPrivate(win);
 }
 Popup.prototype = {
   constructor: Popup,
-  render: function(win) {
+  render: function() {
     const ns = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
     this.popup = win.document.createElementNS(ns, 'panel');
     this.popup.setAttribute('type', 'autocomplete-richlistbox');
@@ -46,7 +62,7 @@ Popup.prototype = {
     this.popup.addEventListener('popuphiding', this);
     this.popup.addEventListener('popupshowing', this);
 
-    window.US.broker.subscribe('iframe::autocomplete-url-clicked',
+    app.broker.subscribe('iframe::autocomplete-url-clicked',
                                this.onAutocompleteURLClicked, this);
 
     // XXX: The browser element is an anonymous XUL element created by XBL at
@@ -57,34 +73,34 @@ Popup.prototype = {
     //      communication.
     this.waitForBrowser();
   },
-  derender: function(win) {
+  derender: function() {
     // remove the load listener, in case uninstall happens before onBrowserLoaded fires
-    window.US.browser.removeEventListener('load', this.onBrowserLoaded, true);
+    app.browser.removeEventListener('load', this.onBrowserLoaded, true);
     this.popupParent.removeChild(this.popup);
 
     this.popup.removeEventListener('popuphiding', this);
     this.popup.removeEventListener('popupshowing', this);
 
-    delete window.US.browser;
-    window.US.broker.unsubscribe('iframe::autocomplete-url-clicked',
+    delete app.browser;
+    app.broker.unsubscribe('iframe::autocomplete-url-clicked',
                                  this.onAutocompleteURLClicked, this);
   },
   waitForBrowser: function() {
     if (this.browserInitialized) { return; }
-    if ('browser' in window.US) {
+    if ('browser' in app) {
       this.browserInitialized = true;
       // TODO: instead of waiting for load event, use an nsIWebProgressListener
-      window.US.browser.addEventListener('load', this.onBrowserLoaded, true);
-      window.US.browser.setAttribute('src', this.frameURL + '?cachebust=' + Date.now());
+      app.browser.addEventListener('load', this.onBrowserLoaded, true);
+      app.browser.setAttribute('src', this.frameURL + '?cachebust=' + Date.now());
       return;
     }
-    setTimeout(() => this.waitForBrowser(), 0);
+    win.setTimeout(() => this.waitForBrowser(), 0);
   },
   // when the iframe is ready, load up the WebChannel by injecting the content.js script
   onBrowserLoaded: function() {
     console.log('Popup: onBrowserLoaded fired');
-    window.US.browser.removeEventListener('load', this.onBrowserLoaded, true);
-    window.US.browser.messageManager.loadFrameScript('chrome://browser/content/content.js', true);
+    app.browser.removeEventListener('load', this.onBrowserLoaded, true);
+    app.browser.messageManager.loadFrameScript('chrome://browser/content/content.js', true);
   },
   handleEvent: function(evt) {
     const handlers = {
@@ -101,13 +117,13 @@ Popup.prototype = {
     this.popup.hidePopup();
   },
   onPopupShowing: function() {
-    window.US.broker.publish('popup::popupOpen');
+    app.broker.publish('popup::popupOpen');
   },
   onPopupHiding: function(evt) {
     if (this.isPinned) {
       return evt.preventDefault();
     }
-    window.US.broker.publish('popup::popupClose');
+    app.broker.publish('popup::popupClose');
   },
   _getImageURLForResolution: function(aWin, aURL, aWidth, aHeight) {
     if (!aURL.endsWith('.ico') && !aURL.endsWith('.ICO')) {
@@ -122,19 +138,19 @@ Popup.prototype = {
   _appendCurrentResult: function() {
     const autocompleteResults = this._getAutocompleteSearchResults();
     if (this.inPrivateContext) {
-      window.US.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
-      window.US.broker.publish('popup::suggestedSearchResults', []);
+      app.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
+      app.broker.publish('popup::suggestedSearchResults', []);
     } else {
       this._getSearchSuggestions().then(function(searchSuggestions) {
-        window.US.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
+        app.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
 
         delete searchSuggestions.formHistoryResult;
-        window.US.broker.publish('popup::suggestedSearchResults',
+        app.broker.publish('popup::suggestedSearchResults',
                                  searchSuggestions);
       }, function(err) {
         Cu.reportError(err);
-        window.US.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
-        window.US.broker.publish('popup::suggestedSearchResults', []);
+        app.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
+        app.broker.publish('popup::suggestedSearchResults', []);
       });
     }
   },
@@ -148,7 +164,7 @@ Popup.prototype = {
     if (controller.matchCount) {
       results = [];
       for (let i = 0; i < Math.min(maxResults, controller.matchCount); i++) {
-        const chromeImgLink = this._getImageURLForResolution(window, controller.getImageAt(i), 16, 16);
+        const chromeImgLink = this._getImageURLForResolution(win, controller.getImageAt(i), 16, 16);
         // if we have a favicon link, it'll be of the form "moz-anno:favicon:http://link/to/favicon"
         // else, it'll be a chrome:// link to the default favicon img
         const imgMatches = chromeImgLink.match(/^moz-anno\:favicon\:(.*)/);

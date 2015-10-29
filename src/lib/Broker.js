@@ -15,10 +15,12 @@
 //   Exception: the old iframe API event names are dashed, so the corresponding
 //   "iframe::" events are, too: "iframe::url-selected". TODO: unify.
 
-let Broker; // eslint-disable-line no-unused-vars
+const EXPORTED_SYMBOLS = ['Broker']; // eslint-disable-line no-unused-vars
 
-Broker = {
-  _subscribers: {},
+function Broker() {
+  this._subscribers = {};
+}
+Broker.prototype = {
   _isValidEvent: function(evt) {
     return evt && typeof evt === 'string';
   },

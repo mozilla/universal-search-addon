@@ -5,12 +5,25 @@
 // the iframe. This is a little weird, but keeps individual UI objects ignorant
 // of the transport.
 
-/* global Cc, Ci, Services, XPCOMUtils, WebChannel */
+/* global Components, Services, WebChannel, XPCOMUtils */
 
+const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
+
+const EXPORTED_SYMBOLS = ['Transport']; // eslint-disable-line no-unused-vars
+
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'Services',
+  'resource://gre/modules/Services.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'WebChannel',
   'resource://gre/modules/WebChannel.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'console',
+  'resource://gre/modules/devtools/Console.jsm');
 
-function Transport() {
+let app;
+
+function Transport(appGlobal) {
+  app = appGlobal;
+
   const prefBranch = Cc['@mozilla.org/preferences-service;1']
                    .getService(Ci.nsIPrefService)
                    .getBranch('');
@@ -28,15 +41,15 @@ Transport.prototype = {
   constructor: Transport,
   init: function() {
     // intentionally alphabetized
-    window.US.broker.subscribe('popup::autocompleteSearchResults',
+    app.broker.subscribe('popup::autocompleteSearchResults',
                                this.onAutocompleteSearchResults, this);
-    window.US.broker.subscribe('popup::popupClose', this.onPopupClose, this);
-    window.US.broker.subscribe('popup::popupOpen', this.onPopupOpen, this);
-    window.US.broker.subscribe('popup::suggestedSearchResults',
+    app.broker.subscribe('popup::popupClose', this.onPopupClose, this);
+    app.broker.subscribe('popup::popupOpen', this.onPopupOpen, this);
+    app.broker.subscribe('popup::suggestedSearchResults',
                                this.onSuggestedSearchResults, this);
-    window.US.broker.subscribe('urlbar::navigationalKey',
+    app.broker.subscribe('urlbar::navigationalKey',
                                this.onNavigationalKey, this);
-    window.US.broker.subscribe('urlbar::printableKey',
+    app.broker.subscribe('urlbar::printableKey',
                                this.onPrintableKey, this);
 
     this.port = new WebChannel(this.channelId,
@@ -48,20 +61,20 @@ Transport.prototype = {
       this.port.stopListening();
     }
 
-    window.US.broker.unsubscribe('popup::autocompleteSearchResults',
+    app.broker.unsubscribe('popup::autocompleteSearchResults',
                                  this.onAutocompleteSearchResults, this);
-    window.US.broker.unsubscribe('popup::popupClose', this.onPopupClose, this);
-    window.US.broker.unsubscribe('popup::popupOpen', this.onPopupOpen, this);
-    window.US.broker.unsubscribe('popup::suggestedSearchResults',
+    app.broker.unsubscribe('popup::popupClose', this.onPopupClose, this);
+    app.broker.unsubscribe('popup::popupOpen', this.onPopupOpen, this);
+    app.broker.unsubscribe('popup::suggestedSearchResults',
                                  this.onSuggestedSearchResults, this);
-    window.US.broker.unsubscribe('urlbar::navigationalKey',
+    app.broker.unsubscribe('urlbar::navigationalKey',
                                  this.onNavigationalKey, this);
-    window.US.broker.unsubscribe('urlbar::printableKey',
+    app.broker.unsubscribe('urlbar::printableKey',
                                this.onPrintableKey, this);
   },
   onContentMessage: function(id, msg, sender) {
     if (id !== this.channelId) { return; }
-    window.US.broker.publish('iframe::' + msg.type, msg.data);
+    app.broker.publish('iframe::' + msg.type, msg.data);
   },
   // Dedupe sequential messages if the user input hasn't changed. See #18 and
   // associated commit message for gnarly details.
@@ -105,7 +118,7 @@ Transport.prototype = {
     };
     console.log('sending the ' + evt + ' message to content:' + JSON.stringify(msg));
     const ctx = {
-      browser: window.US.browser,
+      browser: app.browser,
       principal: Cc['@mozilla.org/systemprincipal;1']
                  .createInstance(Ci.nsIPrincipal)
     };

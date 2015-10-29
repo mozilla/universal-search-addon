@@ -6,7 +6,7 @@
 
 /* global Components, CustomizableUI, Services, XPCOMUtils */
 
-const { utils: Cu } = Components;
+const {utils: Cu} = Components;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'Services',
@@ -36,18 +36,20 @@ const loadIntoWindow = function(win) {
     win.US = win.US || {};
   }
 
+  // we refer to the app global as 'app' everywhere else, so do it here too
+  const app = win.US;
+
   // hide the search bar, if it's visible; this will be null if not
   const searchBarLocation = CustomizableUI.getPlacementOfWidget('search-container');
   if (searchBarLocation) {
-    win.US.searchBarLocation = searchBarLocation;
+    app.searchBarLocation = searchBarLocation;
     CustomizableUI.removeWidgetFromArea('search-container');
   }
 
-  // use Services.scriptloader.loadSubScript to load any addl scripts.
-  Services.scriptloader.loadSubScript('chrome://universalsearch-lib/content/Broker.js', win);
-  Services.scriptloader.loadSubScript('chrome://universalsearch-lib/content/Transport.js', win);
-  Services.scriptloader.loadSubScript('chrome://universalsearch-lib/content/ui/Popup.js', win);
-  Services.scriptloader.loadSubScript('chrome://universalsearch-lib/content/ui/Urlbar.js', win);
+  Cu.import('chrome://universalsearch-lib/content/Broker.js', app);
+  Cu.import('chrome://universalsearch-lib/content/Transport.js', app);
+  Cu.import('chrome://universalsearch-lib/content/ui/Popup.js', app);
+  Cu.import('chrome://universalsearch-lib/content/ui/Urlbar.js', app);
 
   // load the CSS into the document. not using the stylesheet service.
   const stylesheet = document.createElementNS('http://www.w3.org/1999/xhtml', 'h:link');
@@ -57,21 +59,25 @@ const loadIntoWindow = function(win) {
   stylesheet.style.display = 'none';
   document.documentElement.appendChild(stylesheet);
 
-  win.US.broker = win.Broker;
+  // constructor injection of app global for non-UI classes, as needed
+  app.broker = new app.Broker();
 
-  win.US.transport = new win.Transport();
-  win.US.transport.init();
+  app.transport = new app.Transport(app);
+  app.transport.init();
 
-  win.US.popup = new win.Popup();
-  win.US.popup.render(win);
+  // constructor injection of window, needed by UI classes, plus app
+  app.popup = new app.Popup(win, app);
+  app.popup.render();
 
-  win.US.urlbar = new win.Urlbar();
-  win.US.urlbar.render(win);
-  win.US.gURLBar = win.gURLBar;
+  app.urlbar = new app.Urlbar(win, app);
+  app.urlbar.render();
 
-  win.gBrowser.tabContainer.addEventListener('TabSelect', onTabSelect);
-  win.gBrowser.tabContainer.addEventListener('TabOpen', onTabOpen);
-  win.gBrowser.tabContainer.addEventListener('TabClose', onTabClose);
+  app.gURLBar = win.gURLBar;
+  app.gBrowser = win.gBrowser;
+
+  app.gBrowser.tabContainer.addEventListener('TabSelect', onTabSelect);
+  app.gBrowser.tabContainer.addEventListener('TabOpen', onTabOpen);
+  app.gBrowser.tabContainer.addEventListener('TabClose', onTabClose);
 
 };
 
@@ -79,29 +85,33 @@ const loadIntoWindow = function(win) {
 const unloadFromWindow = function(win) {
   console.log('unloadFromWindow start');
 
-  win.US.goButton.derender(win);
-  win.gBrowser.tabContainer.removeEventListener('TabSelect', onTabSelect);
-  win.gBrowser.tabContainer.removeEventListener('TabOpen', onTabOpen);
-  win.gBrowser.tabContainer.removeEventListener('TabClose', onTabClose);
-  win.US.urlbar.derender(win);
-  win.US.popup.derender(win);
+  const app = win.US;
 
-  win.US.transport.shutdown();
-  win.US.broker.shutdown();
+  app.gBrowser.tabContainer.removeEventListener('TabSelect', onTabSelect);
+  app.gBrowser.tabContainer.removeEventListener('TabOpen', onTabOpen);
+  app.gBrowser.tabContainer.removeEventListener('TabClose', onTabClose);
+  app.urlbar.derender();
+  app.popup.derender();
+
+  app.transport.shutdown();
+  app.broker.shutdown();
 
   // show the search bar, if it was visible originally
-  if (win.US.searchBarLocation) {
-    const loc = win.US.searchBarLocation;
+  if (app.searchBarLocation) {
+    const loc = app.searchBarLocation;
     CustomizableUI.addWidgetToArea('search-container', loc.area, loc.position);
   }
 
+  // TODO: remove stylesheets (#105)
+
+  // unload scripts
+  Cu.unload('chrome://universalsearch-lib/content/Broker.js', app);
+  Cu.unload('chrome://universalsearch-lib/content/Transport.js', app);
+  Cu.unload('chrome://universalsearch-lib/content/ui/Popup.js', app);
+  Cu.unload('chrome://universalsearch-lib/content/ui/Urlbar.js', app);
+
   // delete any dangling refs
   delete win.US;
-  delete win.Broker;
-
-  // TODO: not sure these steps are technically necessary:
-  // remove stylesheet
-  // remove subscripts (not sure this is possible, can we just remove the app global?)
 };
 
 function onWindowNotification(win, topic) {
