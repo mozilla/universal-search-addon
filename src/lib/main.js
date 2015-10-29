@@ -90,8 +90,8 @@ const unloadFromWindow = function(win) {
   app.gBrowser.tabContainer.removeEventListener('TabSelect', onTabSelect);
   app.gBrowser.tabContainer.removeEventListener('TabOpen', onTabOpen);
   app.gBrowser.tabContainer.removeEventListener('TabClose', onTabClose);
-  app.urlbar.derender();
-  app.popup.derender();
+  app.urlbar.remove();
+  app.popup.remove();
 
   app.transport.shutdown();
   app.broker.shutdown();

@@ -73,7 +73,7 @@ Popup.prototype = {
     //      communication.
     this.waitForBrowser();
   },
-  derender: function() {
+  remove: function() {
     // remove the load listener, in case uninstall happens before onBrowserLoaded fires
     app.browser.removeEventListener('load', this.onBrowserLoaded, true);
     this.popupParent.removeChild(this.popup);

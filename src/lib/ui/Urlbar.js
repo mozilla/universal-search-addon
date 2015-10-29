@@ -53,7 +53,7 @@ Urlbar.prototype = {
     app.broker.subscribe('iframe::url-selected', this.onURLSelected, this);
     app.broker.subscribe('popup::popupOpen', this.onPopupOpen, this);
   },
-  derender: function() {
+  remove: function() {
     // reconnect original popup to the urlbar
     this.urlbar.setAttribute('autocompletepopup', this.replaced._autocompletepopup);
 
