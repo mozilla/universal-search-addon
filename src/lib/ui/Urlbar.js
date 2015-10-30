@@ -209,10 +209,8 @@ Urlbar.prototype = {
       // the updated urlbar contents to the iframe. If the iframe closes while
       // we're fetching the updated string, that's fine.
       this._sendPrintableKey();
-    } else if (evt.ctrlKey || evt.altKey || evt.metaKey || this._escKeys.indexOf(evt.key) > -1) {
+    } else if (this._escKeys.indexOf(evt.key) > -1) {
       // ArrowLeft, ArrowRight, and Escape all cause the popup to close.
-      // Special keys (Ctrl, Alt, Meta) could mean the user is entering a
-      // hotkey combination, so, we close the popup in those cases, too.
       app.popup.popup.closePopup();
     } else if (evt.key === 'Enter') {
       // Only handle the Enter key if the popup is open or about to open
