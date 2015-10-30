@@ -209,16 +209,21 @@ Urlbar.prototype = {
       // the updated urlbar contents to the iframe. If the iframe closes while
       // we're fetching the updated string, that's fine.
       this._sendPrintableKey();
-    } else if (evt.ctrlKey || evt.altKey || evt.metaKey || this._escKeys.indexOf(evt.key) > -1) {
+    } else if (this._escKeys.indexOf(evt.key) > -1) {
       // ArrowLeft, ArrowRight, and Escape all cause the popup to close.
-      // Special keys (Ctrl, Alt, Meta) could mean the user is entering a
-      // hotkey combination, so, we close the popup in those cases, too.
       app.popup.popup.closePopup();
     } else if (evt.key === 'Enter') {
       // Only handle the Enter key if the popup is open or about to open
       if (app.popup.popup.state === 'open' || app.popup.popup.state === 'showing') {
         evt.preventDefault();
         this._sendNavigationalKey(evt);
+      } else {
+        // For unknown reasons, we can't just ignore the Enter key if the
+        // popup is closed: the Enter key won't do anything :-\
+        // For instance: user types a string, hits left arrow to hide the
+        // popup, then hits enter.
+        // Hacky workaround: explicitly ask the gURLBar to handle it.
+        app.gURLBar.handleCommand();
       }
     } else if (this._navKeys.indexOf(evt.key) > -1) {
       // For other navigational keys, notify the iframe that the keyboard focus
