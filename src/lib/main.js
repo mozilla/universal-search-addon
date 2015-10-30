@@ -6,7 +6,7 @@
 
 /* global Components, CustomizableUI, Services, XPCOMUtils */
 
-const {utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'Services',
@@ -46,6 +46,15 @@ const loadIntoWindow = function(win) {
     CustomizableUI.removeWidgetFromArea('search-container');
   }
 
+  // unified complete changes the behavior of the code we modify, so detect
+  // if we're a version of FF (43 and up) that includes unified complete
+  const appInfo = Cc['@mozilla.org/xre/app-info;1']
+                .getService(Ci.nsIXULAppInfo);
+  const versionChecker = Cc['@mozilla.org/xpcom/version-comparator;1']
+                       .getService(Ci.nsIVersionComparator);
+  app.hasUnifiedComplete = versionChecker.compare(appInfo.version, '43') >= 0;
+
+  // load all scripts into the window
   Cu.import('chrome://universalsearch-lib/content/Broker.js', app);
   Cu.import('chrome://universalsearch-lib/content/Transport.js', app);
   Cu.import('chrome://universalsearch-lib/content/ui/Popup.js', app);

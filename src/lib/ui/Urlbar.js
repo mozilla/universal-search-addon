@@ -35,6 +35,16 @@ Urlbar.prototype = {
     this.replaced._autocompletepopup = this.urlbar.getAttribute('autocompletepopup');
     this.urlbar.setAttribute('autocompletepopup', 'PopupAutoCompleteRichResultUnivSearch');
 
+    // in FF versions less than 43, unified complete has not landed, and the
+    // popup will attempt to auto-close itself if we have zero results from
+    // bookmarks/history for a given input string. We want to prevent the
+    // popup from closing in exactly and only this instance.
+    if (!app.hasUnifiedComplete) {
+      const oldMin = this.urlbar.popup.input.minResultsForPopup;
+      this.urlbar.popup.input._minResultsForPopup = oldMin;
+      this.urlbar.popup.input.minResultsForPopup = 0;
+    }
+
     // TODO: either do something with these events, or remove them
     this.urlbar.addEventListener('focus', this);
     this.urlbar.addEventListener('blur', this);
@@ -54,6 +64,12 @@ Urlbar.prototype = {
     app.broker.subscribe('popup::popupOpen', this.onPopupOpen, this);
   },
   remove: function() {
+    // restore the original minResults setting, if it was changed
+    if (!app.hasUnifiedComplete) {
+      const oldMin = this.urlbar.popup.input._minResultsForPopup;
+      this.urlbar.popup.input.minResultsForPopup = oldMin;
+    }
+
     // reconnect original popup to the urlbar
     this.urlbar.setAttribute('autocompletepopup', this.replaced._autocompletepopup);
 
