@@ -33,7 +33,7 @@ gulp.task('gen-prefs', function(cb){
   contents += '\n// Set prefs using remote content server\n';
   contents += '//user_pref("services.universalSearch.frameURL", "https://d1fnkpeapwua2i.cloudfront.net/index.html");\n';
   contents += '//user_pref("services.universalSearch.baseURL", "https://d1fnkpeapwua2i.cloudfront.net/");\n';
-  fs.writeFile('users.js', contents, cb);
+  fs.writeFile('user.js', contents, cb);
 });
 
 // Generate the `src/install.rdf` and `src/update.rdf` files from the templates.

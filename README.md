@@ -32,8 +32,8 @@ These steps come from the [extension dev page](https://developer.mozilla.org/en-
 ### Setup specific to this addon
 1. If you're hacking on the [iframe](https://github.com/mozilla/universal-search-content), then configure your profile to use a local copy:
   - Run `gulp gen-prefs`
-    - creates a file named `users.js`
-    - move this file to your Firefox profile directory, e.g. `/path/to/ff/Profiles/6h6ygzlo.addon-dev/users.js`
+    - creates a file named `user.js`
+    - move this file to your Firefox profile directory, e.g. `/path/to/ff/Profiles/6h6ygzlo.addon-dev/user.js`
 1. The first time you use a local iframe, you'll probably be serving it from `https://localhost:8080/`. You will get a security warning, it'll look something like this: ![](https://www.dropbox.com/s/9ieyvpimtfkmqo4/Screenshot%202015-07-21%2014.52.10.png?dl=0&raw=true)
 To work around this:
   - Surf to the iframe URL (**the enter key won't work**. You will have to click the Go Button, the little right arrow at the edge of the address bar)
