@@ -123,15 +123,19 @@ const unloadFromWindow = function(win) {
   delete win.US;
 };
 
+function onWindowLoaded(evt) {
+  // Gecko forces us to do unseemly things to obtain a XUL window reference
+  const win = evt.target.ownerGlobal;
+  win.removeEventListener('load', onWindowLoaded, false);
+  if (win.location.href === 'chrome://browser/content/browser.xul') {
+    loadIntoWindow(win);
+  }
+}
+
 function onWindowNotification(win, topic) {
   if (topic !== 'domwindowopened') { return; }
   console.log('iterating windows');
-  win.addEventListener('load', function loader() {
-    win.removeEventListener('load', loader, false);
-    if (win.location.href === 'chrome://browser/content/browser.xul') {
-      loadIntoWindow(win);
-    }
-  }, false);
+  win.addEventListener('load', onWindowLoaded, false);
 }
 
 function load() {

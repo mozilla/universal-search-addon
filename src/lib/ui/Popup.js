@@ -19,13 +19,9 @@ XPCOMUtils.defineLazyModuleGetter(this, 'SearchSuggestionController',
 XPCOMUtils.defineLazyModuleGetter(this, 'console',
   'resource://gre/modules/devtools/Console.jsm');
 
-// module globals
-let win;
-let app;
-
 function Popup(window, appGlobal) {
-  win = window;
-  app = appGlobal;
+  this.win = window;
+  this.app = appGlobal;
 
   const prefBranch = Cc['@mozilla.org/preferences-service;1']
                    .getService(Ci.nsIPrefService)
@@ -37,23 +33,28 @@ function Popup(window, appGlobal) {
   // setting isPinned to true will force the popup to stay open forever
   this.isPinned = false;
 
-  this.inPrivateContext = PrivateBrowsingUtils.isWindowPrivate(win);
+  this.inPrivateContext = PrivateBrowsingUtils.isWindowPrivate(this.win);
 }
 Popup.prototype = {
   constructor: Popup,
   render: function() {
     const ns = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
-    this.popup = win.document.createElementNS(ns, 'panel');
+    this.popup = this.win.document.createElementNS(ns, 'panel');
     this.popup.setAttribute('type', 'autocomplete-richlistbox');
     this.popup.setAttribute('id', 'PopupAutoCompleteRichResultUnivSearch');
     this.popup.setAttribute('noautofocus', 'true');
 
-    const oldPopup = win.document.getElementById('PopupAutoCompleteRichResult');
+    const oldPopup = this.win.document.getElementById('PopupAutoCompleteRichResult');
     this.popupParent = oldPopup.parentElement;
     this.popupParent.appendChild(this.popup);
 
-    // wait till the XBL binding is applied, then override this method
-    this.popup._appendCurrentResult = this._appendCurrentResult.bind(this);
+    // XXX Wait till the XBL binding is applied, then override _appendCurrentResult.
+    //     This actually means we replace an XBL-defined method with one
+    //     defined in JS, which has some funny consequences. In particular,
+    //     XBL seems to invoke callbacks with the xpcshell BackstagePass object
+    //     as the global context, which is madness; .bind() restores sanity.
+    this._appendCurrentResult = Popup.prototype._appendCurrentResult.bind(this);
+    this.popup._appendCurrentResult = this._appendCurrentResult;
 
     // XXX For some bizarre reason I can't just use handleEvent to listen for
     //     the browser element's load event. So, falling back to .bind
@@ -62,7 +63,7 @@ Popup.prototype = {
     this.popup.addEventListener('popuphiding', this);
     this.popup.addEventListener('popupshowing', this);
 
-    app.broker.subscribe('iframe::autocomplete-url-clicked',
+    this.app.broker.subscribe('iframe::autocomplete-url-clicked',
                                this.onAutocompleteURLClicked, this);
 
     // XXX: The browser element is an anonymous XUL element created by XBL at
@@ -75,32 +76,32 @@ Popup.prototype = {
   },
   remove: function() {
     // remove the load listener, in case uninstall happens before onBrowserLoaded fires
-    app.browser.removeEventListener('load', this.onBrowserLoaded, true);
+    this.app.browser.removeEventListener('load', this.onBrowserLoaded, true);
     this.popupParent.removeChild(this.popup);
 
     this.popup.removeEventListener('popuphiding', this);
     this.popup.removeEventListener('popupshowing', this);
 
-    delete app.browser;
-    app.broker.unsubscribe('iframe::autocomplete-url-clicked',
+    delete this.app.browser;
+    this.app.broker.unsubscribe('iframe::autocomplete-url-clicked',
                                  this.onAutocompleteURLClicked, this);
   },
   waitForBrowser: function() {
     if (this.browserInitialized) { return; }
-    if ('browser' in app) {
+    if ('browser' in this.app) {
       this.browserInitialized = true;
       // TODO: instead of waiting for load event, use an nsIWebProgressListener
-      app.browser.addEventListener('load', this.onBrowserLoaded, true);
-      app.browser.setAttribute('src', this.frameURL + '?cachebust=' + Date.now());
+      this.app.browser.addEventListener('load', this.onBrowserLoaded, true);
+      this.app.browser.setAttribute('src', this.frameURL + '?cachebust=' + Date.now());
       return;
     }
-    win.setTimeout(() => this.waitForBrowser(), 0);
+    this.win.setTimeout(() => this.waitForBrowser(), 0);
   },
   // when the iframe is ready, load up the WebChannel by injecting the content.js script
   onBrowserLoaded: function() {
     console.log('Popup: onBrowserLoaded fired');
-    app.browser.removeEventListener('load', this.onBrowserLoaded, true);
-    app.browser.messageManager.loadFrameScript('chrome://browser/content/content.js', true);
+    this.app.browser.removeEventListener('load', this.onBrowserLoaded, true);
+    this.app.browser.messageManager.loadFrameScript('chrome://browser/content/content.js', true);
   },
   handleEvent: function(evt) {
     const handlers = {
@@ -117,13 +118,13 @@ Popup.prototype = {
     this.popup.hidePopup();
   },
   onPopupShowing: function() {
-    app.broker.publish('popup::popupOpen');
+    this.app.broker.publish('popup::popupOpen');
   },
   onPopupHiding: function(evt) {
     if (this.isPinned) {
       return evt.preventDefault();
     }
-    app.broker.publish('popup::popupClose');
+    this.app.broker.publish('popup::popupClose');
   },
   _getImageURLForResolution: function(aWin, aURL, aWidth, aHeight) {
     if (!aURL.endsWith('.ico') && !aURL.endsWith('.ICO')) {
@@ -138,19 +139,19 @@ Popup.prototype = {
   _appendCurrentResult: function() {
     const autocompleteResults = this._getAutocompleteSearchResults();
     if (this.inPrivateContext) {
-      app.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
-      app.broker.publish('popup::suggestedSearchResults', []);
+      this.app.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
+      this.app.broker.publish('popup::suggestedSearchResults', []);
     } else {
-      this._getSearchSuggestions().then(function(searchSuggestions) {
-        app.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
+      this._getSearchSuggestions().then((searchSuggestions) => {
+        this.app.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
 
         delete searchSuggestions.formHistoryResult;
-        app.broker.publish('popup::suggestedSearchResults',
+        this.app.broker.publish('popup::suggestedSearchResults',
                                  searchSuggestions);
-      }, function(err) {
+      }, (err) => {
         Cu.reportError(err);
-        app.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
-        app.broker.publish('popup::suggestedSearchResults', []);
+        this.app.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
+        this.app.broker.publish('popup::suggestedSearchResults', []);
       });
     }
   },
@@ -164,7 +165,7 @@ Popup.prototype = {
     if (controller.matchCount) {
       results = [];
       for (let i = 0; i < Math.min(maxResults, controller.matchCount); i++) {
-        const chromeImgLink = this._getImageURLForResolution(win, controller.getImageAt(i), 16, 16);
+        const chromeImgLink = this._getImageURLForResolution(this.win, controller.getImageAt(i), 16, 16);
         // if we have a favicon link, it'll be of the form "moz-anno:favicon:http://link/to/favicon"
         // else, it'll be a chrome:// link to the default favicon img
         const imgMatches = chromeImgLink.match(/^moz-anno\:favicon\:(.*)/);

@@ -19,10 +19,8 @@ XPCOMUtils.defineLazyModuleGetter(this, 'WebChannel',
 XPCOMUtils.defineLazyModuleGetter(this, 'console',
   'resource://gre/modules/devtools/Console.jsm');
 
-let app;
-
 function Transport(appGlobal) {
-  app = appGlobal;
+  this.app = appGlobal;
 
   const prefBranch = Cc['@mozilla.org/preferences-service;1']
                    .getService(Ci.nsIPrefService)
@@ -41,15 +39,15 @@ Transport.prototype = {
   constructor: Transport,
   init: function() {
     // intentionally alphabetized
-    app.broker.subscribe('popup::autocompleteSearchResults',
+    this.app.broker.subscribe('popup::autocompleteSearchResults',
                                this.onAutocompleteSearchResults, this);
-    app.broker.subscribe('popup::popupClose', this.onPopupClose, this);
-    app.broker.subscribe('popup::popupOpen', this.onPopupOpen, this);
-    app.broker.subscribe('popup::suggestedSearchResults',
+    this.app.broker.subscribe('popup::popupClose', this.onPopupClose, this);
+    this.app.broker.subscribe('popup::popupOpen', this.onPopupOpen, this);
+    this.app.broker.subscribe('popup::suggestedSearchResults',
                                this.onSuggestedSearchResults, this);
-    app.broker.subscribe('urlbar::navigationalKey',
+    this.app.broker.subscribe('urlbar::navigationalKey',
                                this.onNavigationalKey, this);
-    app.broker.subscribe('urlbar::printableKey',
+    this.app.broker.subscribe('urlbar::printableKey',
                                this.onPrintableKey, this);
 
     this.port = new WebChannel(this.channelId,
@@ -61,20 +59,20 @@ Transport.prototype = {
       this.port.stopListening();
     }
 
-    app.broker.unsubscribe('popup::autocompleteSearchResults',
+    this.app.broker.unsubscribe('popup::autocompleteSearchResults',
                                  this.onAutocompleteSearchResults, this);
-    app.broker.unsubscribe('popup::popupClose', this.onPopupClose, this);
-    app.broker.unsubscribe('popup::popupOpen', this.onPopupOpen, this);
-    app.broker.unsubscribe('popup::suggestedSearchResults',
+    this.app.broker.unsubscribe('popup::popupClose', this.onPopupClose, this);
+    this.app.broker.unsubscribe('popup::popupOpen', this.onPopupOpen, this);
+    this.app.broker.unsubscribe('popup::suggestedSearchResults',
                                  this.onSuggestedSearchResults, this);
-    app.broker.unsubscribe('urlbar::navigationalKey',
+    this.app.broker.unsubscribe('urlbar::navigationalKey',
                                  this.onNavigationalKey, this);
-    app.broker.unsubscribe('urlbar::printableKey',
+    this.app.broker.unsubscribe('urlbar::printableKey',
                                this.onPrintableKey, this);
   },
   onContentMessage: function(id, msg, sender) {
     if (id !== this.channelId) { return; }
-    app.broker.publish('iframe::' + msg.type, msg.data);
+    this.app.broker.publish('iframe::' + msg.type, msg.data);
   },
   // Dedupe sequential messages if the user input hasn't changed. See #18 and
   // associated commit message for gnarly details.
@@ -118,7 +116,7 @@ Transport.prototype = {
     };
     console.log('sending the ' + evt + ' message to content:' + JSON.stringify(msg));
     const ctx = {
-      browser: app.browser,
+      browser: this.app.browser,
       principal: Cc['@mozilla.org/systemprincipal;1']
                  .createInstance(Ci.nsIPrincipal)
     };

@@ -30,6 +30,7 @@ Broker.prototype = {
   _eventExists: function(evt) {
     return evt in this._subscribers;
   },
+  shutdown: function() {},
   subscribe: function(evt, cb, thisArg) {
     if (!this._isValidEvent(evt)) {
       throw new TypeError('called subscribe with invalid event name ' + evt);
@@ -42,7 +43,7 @@ Broker.prototype = {
     }
 
     let exists;
-    this._subscribers[evt].forEach(function(subscriber) {
+    this._subscribers[evt].forEach((subscriber) => {
       if (subscriber.cb === cb && subscriber.thisArg === thisArg) {
         exists = true;
       }
@@ -62,7 +63,7 @@ Broker.prototype = {
       throw new TypeError('called unsubscribe for unknown event ' + evt);
     }
 
-    this._subscribers[evt].forEach(function(subscribed, i) {
+    this._subscribers[evt].forEach((subscribed, i) => {
       if (subscribed.cb === cb && subscribed.thisArg === thisArg) {
         this._subscribers[evt].splice(i, 1);
       }
@@ -79,7 +80,7 @@ Broker.prototype = {
       throw new TypeError('called publish with invalid event name ' + evt);
     }
 
-    this._subscribers[evt].forEach(function(subscriber) {
+    this._subscribers[evt].forEach((subscriber) => {
       subscriber.cb.apply(subscriber.thisArg, args);
     });
   }
