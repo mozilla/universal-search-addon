@@ -16,12 +16,9 @@ XPCOMUtils.defineLazyModuleGetter(this, 'PrivateBrowsingUtils',
 XPCOMUtils.defineLazyModuleGetter(this, 'console',
   'resource://gre/modules/devtools/Console.jsm');
 
-let win;
-let app;
-
 function Urlbar(window, appGlobal) {
-  win = window;
-  app = appGlobal;
+  this.win = window;
+  this.app = appGlobal;
   this.urlbarUpdateTimer = null;
   this.urlbarNavigateTimer = null;
   // replaced handlers and elements
@@ -30,7 +27,7 @@ function Urlbar(window, appGlobal) {
 Urlbar.prototype = {
   constructor: Urlbar,
   render: function() {
-    this.urlbar = win.document.getElementById('urlbar');
+    this.urlbar = this.win.document.getElementById('urlbar');
 
     this.replaced._autocompletepopup = this.urlbar.getAttribute('autocompletepopup');
     this.urlbar.setAttribute('autocompletepopup', 'PopupAutoCompleteRichResultUnivSearch');
@@ -39,7 +36,7 @@ Urlbar.prototype = {
     // popup will attempt to auto-close itself if we have zero results from
     // bookmarks/history for a given input string. We want to prevent the
     // popup from closing in exactly and only this instance.
-    if (!app.hasUnifiedComplete) {
+    if (!this.app.hasUnifiedComplete) {
       const oldMin = this.urlbar.popup.input.minResultsForPopup;
       this.urlbar.popup.input._minResultsForPopup = oldMin;
       this.urlbar.popup.input.minResultsForPopup = 0;
@@ -58,14 +55,14 @@ Urlbar.prototype = {
     // the XBL bindings, so that our binding is applied. :-P
     this.urlbar.parentNode.insertBefore(this.urlbar, this.urlbar.nextSibling);
 
-    app.broker.subscribe('iframe::autocomplete-url-clicked',
+    this.app.broker.subscribe('iframe::autocomplete-url-clicked',
                                this.onAutocompleteURLClicked, this);
-    app.broker.subscribe('iframe::url-selected', this.onURLSelected, this);
-    app.broker.subscribe('popup::popupOpen', this.onPopupOpen, this);
+    this.app.broker.subscribe('iframe::url-selected', this.onURLSelected, this);
+    this.app.broker.subscribe('popup::popupOpen', this.onPopupOpen, this);
   },
   remove: function() {
     // restore the original minResults setting, if it was changed
-    if (!app.hasUnifiedComplete) {
+    if (!this.app.hasUnifiedComplete) {
       const oldMin = this.urlbar.popup.input._minResultsForPopup;
       this.urlbar.popup.input.minResultsForPopup = oldMin;
     }
@@ -84,10 +81,10 @@ Urlbar.prototype = {
     // again, refresh the urlbar to update XBL bindings
     this.urlbar.parentNode.insertBefore(this.urlbar, this.urlbar.nextSibling);
 
-    app.broker.unsubscribe('iframe::autocomplete-url-clicked',
+    this.app.broker.unsubscribe('iframe::autocomplete-url-clicked',
                                  this.onAutocompleteURLClicked, this);
-    app.broker.unsubscribe('iframe::url-selected', this.onURLSelected, this);
-    app.broker.unsubscribe('popup::popupOpen', this.onPopupOpen, this);
+    this.app.broker.unsubscribe('iframe::url-selected', this.onURLSelected, this);
+    this.app.broker.unsubscribe('popup::popupOpen', this.onPopupOpen, this);
   },
   onAutocompleteURLClicked: function(data) {
     if (data.resultType === 'url') {
@@ -115,14 +112,14 @@ Urlbar.prototype = {
     // which is convoluted but involves saving the last typed string, such
     // that, if the user has the popup open, then hits the Escape key twice,
     // the last typed value (or the last navigated value?) is shown.
-    app.gURLBar.value = url;
+    this.app.gURLBar.value = url;
     if (searchTerm) {
-      app.gURLBar.inputField.value = searchTerm;
+      this.app.gURLBar.inputField.value = searchTerm;
     }
   },
   updateUrlbar: function(url, searchTerm) {
-    win.clearTimeout(this.urlbarUpdateTimer);
-    this.urlbarUpdateTimer = win.setTimeout(() => {
+    this.win.clearTimeout(this.urlbarUpdateTimer);
+    this.urlbarUpdateTimer = this.win.setTimeout(() => {
       this._setUrlbarValue(url, searchTerm);
     }, 0);
   },
@@ -136,13 +133,13 @@ Urlbar.prototype = {
   // keys also set an update timer to show the selected item in the urlbar,
   // clear that timer, if it's set.
   navigate: function(url, searchTerm) {
-    win.clearTimeout(this.urlbarUpdateTimer);
+    this.win.clearTimeout(this.urlbarUpdateTimer);
     this.urlbarUpdateTimer = null;
 
-    win.clearTimeout(this.urlbarNavigateTimer);
-    this.urlbarNavigateTimer = win.setTimeout(() => {
+    this.win.clearTimeout(this.urlbarNavigateTimer);
+    this.urlbarNavigateTimer = this.win.setTimeout(() => {
       this._setUrlbarValue(url, searchTerm);
-      app.gURLBar.handleCommand(url);
+      this.app.gURLBar.handleCommand(url);
     }, 0);
   },
   onURLSelected: function(data) {
@@ -157,8 +154,8 @@ Urlbar.prototype = {
       // An Enter was pressed with the popup open, but nothing was selected, so
       // navigate to whatever's in the urlbar.
       // Set a dummy timer to avoid later nav-keys preventing the navigation.
-      this.urlbarNavigateTimer = win.setTimeout(() => {});
-      app.gURLBar.handleCommand();
+      this.urlbarNavigateTimer = this.win.setTimeout(() => {});
+      this.app.gURLBar.handleCommand();
     } else {
       // The user selected a search suggestion.
       // Set a timeout to show the search term in the address bar,
@@ -189,10 +186,10 @@ Urlbar.prototype = {
     if (this._delayedCloseTimer) {
       return;
     }
-    this._delayedCloseTimer = win.setTimeout(() => {
+    this._delayedCloseTimer = this.win.setTimeout(() => {
       this._delayedCloseTimer = null;
-      if (!app.gURLBar.value) {
-        app.popup.popup.closePopup();
+      if (!this.app.gURLBar.value) {
+        this.app.popup.popup.closePopup();
       }
     }, 0);
   },
@@ -203,15 +200,15 @@ Urlbar.prototype = {
       key: evt.key,
       shiftKey: evt.shiftKey
     };
-    app.broker.publish('urlbar::navigationalKey', data);
+    this.app.broker.publish('urlbar::navigationalKey', data);
   },
   _sendPrintableKey: function() {
     // Wait a turn to reliably get the updated urlbar contents.
-    win.setTimeout(() => {
+    this.win.setTimeout(() => {
       const data = {
-        query: app.gBrowser.userTypedValue
+        query: this.app.gBrowser.userTypedValue
       };
-      app.broker.publish('urlbar::printableKey', data);
+      this.app.broker.publish('urlbar::printableKey', data);
     });
   },
   onKeyDown: function(evt) {
@@ -227,10 +224,10 @@ Urlbar.prototype = {
       this._sendPrintableKey();
     } else if (this._escKeys.indexOf(evt.key) > -1) {
       // ArrowLeft, ArrowRight, and Escape all cause the popup to close.
-      app.popup.popup.closePopup();
+      this.app.popup.popup.closePopup();
     } else if (evt.key === 'Enter') {
       // Only handle the Enter key if the popup is open or about to open
-      if (app.popup.popup.state === 'open' || app.popup.popup.state === 'showing') {
+      if (this.app.popup.popup.state === 'open' || this.app.popup.popup.state === 'showing') {
         evt.preventDefault();
         this._sendNavigationalKey(evt);
       } else {
@@ -239,14 +236,14 @@ Urlbar.prototype = {
         // For instance: user types a string, hits left arrow to hide the
         // popup, then hits enter.
         // Hacky workaround: explicitly ask the gURLBar to handle it.
-        app.gURLBar.handleCommand();
+        this.app.gURLBar.handleCommand();
       }
     } else if (this._navKeys.indexOf(evt.key) > -1) {
       // For other navigational keys, notify the iframe that the keyboard focus
       // needs to be adjusted.
       this._sendNavigationalKey(evt);
     } else if (evt.key.length === 1
-               && !PrivateBrowsingUtils.isWindowPrivate(win)) {
+               && !PrivateBrowsingUtils.isWindowPrivate(this.win)) {
       // Send printable, non-navigational keys to the iframe.
       // TODO: I'm not sure of the best way to ensure we have a printable key,
       // filed as issue #118. Our en-US centric hack: if the evt.key value is
@@ -266,9 +263,9 @@ Urlbar.prototype = {
   onDrop: function(evt) {},
   onPopupOpen: function() {
     // clear any timeouts left over from the last run
-    win.clearTimeout(this.urlbarUpdateTimer);
+    this.win.clearTimeout(this.urlbarUpdateTimer);
     this.urlbarUpdateTimer = null;
-    win.clearTimeout(this.urlbarNavigateTimer);
+    this.win.clearTimeout(this.urlbarNavigateTimer);
     this.urlbarNavigateTimer = null;
   }
 };
