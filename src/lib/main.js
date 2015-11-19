@@ -59,6 +59,7 @@ const loadIntoWindow = function(win) {
   Cu.import('chrome://universalsearch-lib/content/Transport.js', app);
   Cu.import('chrome://universalsearch-lib/content/ui/Popup.js', app);
   Cu.import('chrome://universalsearch-lib/content/ui/Urlbar.js', app);
+  Cu.import('chrome://universalsearch-lib/content/PlacesSearch.js', app);
 
   // load the CSS into the document. not using the stylesheet service.
   const stylesheet = document.createElementNS('http://www.w3.org/1999/xhtml', 'h:link');
@@ -70,7 +71,7 @@ const loadIntoWindow = function(win) {
 
   // constructor injection of app global for non-UI classes, as needed
   app.broker = new app.Broker();
-
+  app.placesSearch = new app.PlacesSearch();
   app.transport = new app.Transport(app);
   app.transport.init();
 
@@ -103,6 +104,7 @@ const unloadFromWindow = function(win) {
   app.popup.remove();
 
   app.transport.shutdown();
+  app.placesSearch.shutdown();
   app.broker.shutdown();
 
   // show the search bar, if it was visible originally
@@ -118,6 +120,7 @@ const unloadFromWindow = function(win) {
   Cu.unload('chrome://universalsearch-lib/content/Transport.js', app);
   Cu.unload('chrome://universalsearch-lib/content/ui/Popup.js', app);
   Cu.unload('chrome://universalsearch-lib/content/ui/Urlbar.js', app);
+  Cu.unload('chrome://universalsearch-lib/content/PlacesSearch.js', app);
 
   // delete any dangling refs
   delete win.US;

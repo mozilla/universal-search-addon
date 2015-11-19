@@ -27,11 +27,11 @@ For each of these events, the general packet format is `{ type, data }`, where `
 
 This event contains autocomplete search results pulled from the Places DB, as well as the search term.
 
-When the user types something in the address bar, the autocomplete search service looks through history/bookmarks/other unknown local stuff, and comes up with a list of results. The results are then sent down inside this event.
+When the user types something in the address bar, we look for matches in history and bookmarks by running a Places query based on the existing autocomplete code. Note that the search only covers local history; synced data from remote browsers isn't included. The results are then sent down inside this event.
 
 Note: if no results are returned, the results array will be empty.
 
-Note: the current max number of results returned is 5; I made this up, it's trivial to change it.
+Note: the current max number of results returned is 20; I made this up, it's trivial to change it.
 
 ```
 { results: array of result objects }
@@ -39,11 +39,18 @@ Note: the current max number of results returned is 5; I made this up, it's triv
 result:
 {
   url: the page URL, which might be a browser-specific thing like "about:blank"
-       or "moz-action:switchtab,http://example.com"
   title: page title
-  image: favicon URL (or null, if the browser has no favicon)
-  type: "bookmark" or "favicon" or "action favicon"...I don't know what these mean,
-        maybe they are classes used in styling the xul list items?
+  image: favicon URL
+  imageData: favicon image as Base64 data-uri (or null, if the file isn't cached)
+  type: 'action' if the page is open,
+        'bookmark' if the page is bookmarked,
+        'favicon' otherwise.
+        Originally based on XUL styling rules for the old popup.
+  open: true if the page is currently open
+  bookmark: null if not bookmarked, else an object of the form: {
+    title: possibly user-edited title for the bookmarked page
+    tags: user-created tags, if any, for the bookmarked page
+  }
   text: the search term in the address bar
 }
 ```
