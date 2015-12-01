@@ -42,6 +42,7 @@ Transport.prototype = {
     this.app.broker.subscribe('popup::autocompleteSearchResults',
                                this.onAutocompleteSearchResults, this);
     this.app.broker.subscribe('popup::popupClose', this.onPopupClose, this);
+    this.app.broker.subscribe('popup::popupHeight', this.onPopupHeight, this);
     this.app.broker.subscribe('popup::popupOpen', this.onPopupOpen, this);
     this.app.broker.subscribe('popup::suggestedSearchResults',
                                this.onSuggestedSearchResults, this);
@@ -62,6 +63,7 @@ Transport.prototype = {
     this.app.broker.unsubscribe('popup::autocompleteSearchResults',
                                  this.onAutocompleteSearchResults, this);
     this.app.broker.unsubscribe('popup::popupClose', this.onPopupClose, this);
+    this.app.broker.unsubscribe('popup::popupHeight', this.onPopupHeight, this);
     this.app.broker.unsubscribe('popup::popupOpen', this.onPopupOpen, this);
     this.app.broker.unsubscribe('popup::suggestedSearchResults',
                                  this.onSuggestedSearchResults, this);
@@ -103,6 +105,9 @@ Transport.prototype = {
   onPrintableKey: function(msg) {
     this.sendMessage('printable-key', msg);
   },
+  onPopupHeight: function(msg) {
+    this.sendMessage('popupheight', msg);
+  },
   onPopupOpen: function(msg) {
     this.sendMessage('popupopen');
   },
@@ -114,7 +119,8 @@ Transport.prototype = {
       type: evt,
       data: data || null
     };
-    console.log('sending the ' + evt + ' message to content:' + JSON.stringify(msg));
+    // Super helpful for debugging:
+    // console.log('sending the ' + evt + ' message to content:' + JSON.stringify(msg));
     const ctx = {
       browser: this.app.browser,
       principal: Cc['@mozilla.org/systemprincipal;1']

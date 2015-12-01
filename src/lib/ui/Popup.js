@@ -58,6 +58,11 @@ Popup.prototype = {
     this._appendCurrentResult = Popup.prototype._appendCurrentResult.bind(this);
     this.popup._appendCurrentResult = this._appendCurrentResult;
 
+    // Once the popup is in the XUL DOM, we want to set its height to a default.
+    // For now, using 303px, the number we've historically set via CSS. We
+    // could easily set this default via a pref, too.
+    this.popup.sizeTo(this.popup.width, 303);
+
     // XXX For some bizarre reason I can't just use handleEvent to listen for
     //     the browser element's load event. So, falling back to .bind
     this.onBrowserLoaded = this.onBrowserLoaded.bind(this);
@@ -67,6 +72,8 @@ Popup.prototype = {
 
     this.app.broker.subscribe('iframe::autocomplete-url-clicked',
                                this.onAutocompleteURLClicked, this);
+    this.app.broker.subscribe('iframe::adjust-height',
+                               this.onAdjustHeight, this);
 
     // XXX: The browser element is an anonymous XUL element created by XBL at
     //      an unpredictable time in the startup flow. We have to wait for the
@@ -119,8 +126,30 @@ Popup.prototype = {
   onAutocompleteURLClicked: function() {
     this.popup.hidePopup();
   },
+  onAdjustHeight: function(data) {
+    if (!data || !data.height) {
+      throw new Error('Popup: onAdjustHeight failed: no height specified');
+    }
+    const newHeight = parseInt(data.height, 10);
+    if (!isFinite(newHeight)) {
+      throw new Error('Popup: onAdjustHeight failed: invalid height specified');
+    }
+
+    this.popup.sizeTo(this.popup.width, newHeight);
+
+    // Wait a turn, then confirm the new height by checking the XUL DOM.
+    this.win.setTimeout(() => {
+      this.sendPopupHeight();
+    }, 0);
+  },
   onPopupShowing: function() {
     this.app.broker.publish('popup::popupOpen');
+    this.sendPopupHeight();
+  },
+  sendPopupHeight: function() {
+    this.app.broker.publish('popup::popupHeight', {
+      height: this.popup.height
+    });
   },
   onPopupHiding: function(evt) {
     if (this.isPinned) {
