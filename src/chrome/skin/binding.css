@@ -1,5 +1,11 @@
 #PopupAutoCompleteRichResultUnivSearch {
+  /* This odd CSS property connects an XBL file with XUL DOM.
+   * See mdn.io/moz-binding for more.
+   */
   -moz-binding: url("chrome://universalsearch/content/content.xml#autocomplete-rich-result-popup-univ-search");
-  min-height: 303px;
+
+  /* Setting a sane lower limit here; we'll use JS to set default height. */
+  min-height: 20px;
+
   overflow: hidden;
 }

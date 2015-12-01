@@ -56,6 +56,17 @@ To work around this:
 
 ## Useful Snippets
 
+#### Simulating iframe events
+We use pubsub to mediate connections between the Transport and everything else.
+
+This means that faking an event from the iframe is easy, once you know the name and contents of the expected event.
+
+Find the complete list of events from either the docs/API.md file, or by grepping for '::' in the src directory.
+
+If you want to see an example event object, then uncomment the console.log inside `Transport.sendMessage`, trigger the event you care about, and you should be able to inspect the logged object inside the Browser Toolbox.
+
+Once you know the signal you want to simulate, you need a pointer to the broker, in order to fire a fake signal into the app. This is easy to do, because the app global is visible on the ChromeWindow. For instance, if you want to fire an `adjust-height` event, open up the Browser Toolbox and type this: `window.US.broker.publish('iframe::adjust-height', { height: 100 })`. The popup should look shorter next time you type something in the urlbar :-). If you want to instantly see the effect on the popup, pin it open (see the 'force the popup to stay open' snippet).
+
 #### Force the popup to stay open
 Note: By design, this only works on one window at a time.
   - Enable & open the Browser Toolkit (see [MDN docs](https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox#Enabling_the_Browser_Toolbox), it's easy)
@@ -63,3 +74,4 @@ Note: By design, this only works on one window at a time.
   - Next time the popup opens, it'll stay open.
   - Set `window.US.popup.isPinned` to `false` when you're done - or just close the window.
   - Note: the Browser Toolkit slows performance down a lot. Close it if you don't need to actively debug stuff, and the iframe will be much snappier.
+

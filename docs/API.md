@@ -12,10 +12,12 @@ For each of these events, the general packet format is `{ type, data }`, where `
     * [`navigational-key`](#navigational-key)
     * [`printable-key`](#printable-key)
     * [`popupopen`](#popupopen)
+    * [`popupheight`](#popupheight)
     * [`popupclose`](#popupclose)
 * Content to Addon
   * [`autocomplete-url-clicked`](#autocomplete-url-clicked)
-  * [`url-selected`](url-selected)
+  * [`url-selected`](#url-selected)
+  * [`adjust-height`](#adjust-height)
 
 ---
 
@@ -110,6 +112,18 @@ This event is sent when the popup is about to open.
 
 Corresponds to XUL `popupshowing` event.
 
+### `popupheight`
+
+This event is sent when the popup is about to open (separately from the `popupopen` event), and after an `adjust-height` message has been received and acted on, confirming that the resize worked.
+
+The event contents are the integer height of the popup in pixels (note that the message just contains the integer, and not the 'px' unit).
+
+```
+{
+  height: integer pixel height of the popup
+}
+```
+
 ### `popupclose`
 
 This event is sent to the iframe when the popup is about to close.
@@ -171,6 +185,23 @@ If there is no selected item and the user has hit Enter, use the `empty` type. T
     result: the text contents of the item selected by the user, could be a
             search suggestion or a url
     resultType: 'suggestion' or 'url' or 'empty'
+  }
+}
+```
+
+### `adjust-height`
+
+This event should be sent when the iframe wants to change the height of its container.
+
+After setting the height, the addon will wait a turn, then send back a `popupheight` event, so the iframe can confirm the resize worked.
+
+The `popupheight` event is also sent each time the popup opens, so the iframe will know if it needs to request a height change.
+
+```
+{
+  type: 'adjust-height',
+  data: {
+    height: integer value for the new height
   }
 }
 ```
