@@ -6,29 +6,49 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
   <binding id="autocomplete-rich-result-popup-univ-search" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup">
     <content ignorekeys="false" level="top" consumeoutsideclicks="false">
+      <!-- The XBL startup process and the JS+DOM startup process race to
+           completion, and we need to listen for the load event fired by
+           the framed page.
+
+           In order to force initialization to happen in a predictable order,
+           we insert an empty <browser> node here; then in the <constructor>
+           below, we pass the JS side a reference to the browser element; on
+           the JS side, we poll until the browser el is visible, and then set
+           the browser el's src, starting the window load process. See the
+           lib/ui/Popup#render() method for more.
+      -->
       <xul:browser anonid="infect-and-destroy" type="content" height="366" minheight="366" flex="1" />
     </content>
 
     <implementation>
        <constructor>
         <![CDATA[
-          // JS cannot access XBL-created anonymous elements, so we have to
-          // pass the element pointer in this way
-          this.browser = document.getAnonymousElementByAttribute(this, 'anonid', 'infect-and-destroy');
-          US.browser = this.browser;
+          // JS cannot access XBL-created anonymous elements, but XBL can get
+          // and set global properties of the same window object visible to JS,
+          // and the window.US global set by lib/main.js seems to be available
+          // consistently before this constructor is invoked. So, we expose the
+          // browser element to the Popup JS initialization code by setting
+          // `US.browser` to that element.
+          //
+          US.browser = document.getAnonymousElementByAttribute(this, 'anonid', 'infect-and-destroy');
         ]]>
       </constructor>
       <property name="selectedIndex"
                 onget="return 0;">
         <setter>
           <![CDATA[
-            // override inherited method
+            // Override inherited method to avoid errors being thrown by the
+            // super method checking `this.tree.currentIndex`. Our popup
+            // implementation doesn't have `this.tree`, because we replace the
+            // inherited popup contents with a single <browser> element.
           ]]>
         </setter>
       </property>
       <method name="_invalidate">
         <body>
           <![CDATA[
+            // The inherited method calls _appendCurrentResult and recalculates
+            // the richlistbox height. Override, removing the XUL DOM code.
             this._appendCurrentResult();
           ]]>
         </body>
@@ -38,26 +58,52 @@
         <parameter name="aElement"/>
         <body>
           <![CDATA[
-          if (!this.mPopupOpen) {
-            this.mInput = aInput;
-            this._invalidate();
+            // Override inherited method, keeping the code that calculates the
+            // width of the popup (which we still use), but removing references
+            // to this.view (an nsITreeView we've removed). As always, we are
+            // forced to override parts of code via copy and paste, because the
+            // methods in the parent class are really, really long.
+            // TODO: the width calculation code has gotten an update with the
+            // unified complete work. Investigate changing ours to match.
+            if (!this.mPopupOpen) {
+              this.mInput = aInput;
+              this._invalidate();
 
-            var width = aElement.getBoundingClientRect().width;
-            this.setAttribute("width", width > 500 ? width : 500);
-            this.openPopup(aElement, "after_start", 0, 0, false, true);
-          }
+              var width = aElement.getBoundingClientRect().width;
+              this.setAttribute("width", width > 500 ? width : 500);
+              this.openPopup(aElement, "after_start", 0, 0, false, true);
+            }
         ]]>
         </body>
       </method>
-
       <method name="_appendCurrentResult">
         <body>
           <![CDATA[
-            // override inherited method
+            // We want to override this method with a method that runs in
+            // the more predictable, documented, and familiar JS+DOM
+            // environment. Oddly, we'll do this DOM Level 0 style, in the
+            // lib/ui/Popup render method, by assigning
+            // browser._appendCurrentResult to a JS-defined method.
+            //
+            // Because we don't want to override the method in the superclass,
+            // which is also the parent of the form field autocomplete UI, we
+            // create an _appendCurrentResult on our subclass by creating an
+            // empty no-op method here, on the XBL side. (Clearly there is a
+            // kind of prototypal inheritance at work, though exactly how it
+            // works is poorly documented, and XBL itself is an unspecified
+            // language.)
           ]]>
         </body>
       </method>
-
+      <method name="onSearchBegin">
+        <body>
+          <![CDATA[
+            // Override another inherited method to avoid throwing: the super
+            // method tries to access a property of `this.richlistbox`, another
+            // XUL element our popup doesn't have.
+          ]]>
+        </body>
+      </method>
     </implementation>
   </binding>
 </bindings>

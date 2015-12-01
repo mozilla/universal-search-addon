@@ -3,7 +3,7 @@
 'use strict';
 
 /* global Components, PrivateBrowsingUtils, SearchSuggestionController,
-          Services, XPCOMUtils */
+          Services, Task, XPCOMUtils */
 
 const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
 
@@ -18,6 +18,8 @@ XPCOMUtils.defineLazyModuleGetter(this, 'SearchSuggestionController',
   'resource://gre/modules/SearchSuggestionController.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'console',
   'resource://gre/modules/devtools/Console.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'Task',
+  'resource://gre/modules/Task.jsm');
 
 function Popup(window, appGlobal) {
   this.win = window;
@@ -126,64 +128,29 @@ Popup.prototype = {
     }
     this.app.broker.publish('popup::popupClose');
   },
-  _getImageURLForResolution: function(aWin, aURL, aWidth, aHeight) {
-    if (!aURL.endsWith('.ico') && !aURL.endsWith('.ICO')) {
-      return aURL;
-    }
-    const width = Math.round(aWidth * aWin.devicePixelRatio);
-    const height = Math.round(aHeight * aWin.devicePixelRatio);
-    return aURL + (aURL.contains('#') ? '&' : '#') +
-           '-moz-resolution=' + width + ',' + height;
-  },
-  // TODO: use UnifiedComplete instead of calling these services separately (#114)
   _appendCurrentResult: function() {
-    const autocompleteResults = this._getAutocompleteSearchResults();
-    if (this.inPrivateContext) {
-      this.app.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
-      this.app.broker.publish('popup::suggestedSearchResults', []);
-    } else {
-      this._getSearchSuggestions().then((searchSuggestions) => {
-        this.app.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
-
-        delete searchSuggestions.formHistoryResult;
-        this.app.broker.publish('popup::suggestedSearchResults',
-                                 searchSuggestions);
-      }, (err) => {
-        Cu.reportError(err);
-        this.app.broker.publish('popup::autocompleteSearchResults', autocompleteResults);
+    this._getPlacesSuggestions().then((placesResults) => {
+      if (this.inPrivateContext) {
+        this.app.broker.publish('popup::autocompleteSearchResults', placesResults);
         this.app.broker.publish('popup::suggestedSearchResults', []);
-      });
-    }
-  },
-  _getAutocompleteSearchResults: function() {
-    const controller = this.popup.mInput.controller;
-    const maxResults = 5;
-    let results = [];
-
-    // the controller's searchStatus is not a reliable way to decide when/what to send.
-    // instead, we'll just check the number of results and act accordingly.
-    if (controller.matchCount) {
-      results = [];
-      for (let i = 0; i < Math.min(maxResults, controller.matchCount); i++) {
-        const chromeImgLink = this._getImageURLForResolution(this.win, controller.getImageAt(i), 16, 16);
-        // if we have a favicon link, it'll be of the form "moz-anno:favicon:http://link/to/favicon"
-        // else, it'll be a chrome:// link to the default favicon img
-        const imgMatches = chromeImgLink.match(/^moz-anno\:favicon\:(.*)/);
-
-        results.push({
-          url: Components.classes['@mozilla.org/intl/texttosuburi;1'].
-                getService(Components.interfaces.nsITextToSubURI).
-                unEscapeURIForUI('UTF-8', controller.getValueAt(i)),
-          image: imgMatches ? imgMatches[1] : null,
-          title: controller.getCommentAt(i),
-          type: controller.getStyleAt(i),
-          text: controller.searchString.trim()
+      } else {
+        this._getSearchSuggestions().then((searchSuggestions) => {
+          this.app.broker.publish('popup::autocompleteSearchResults', placesResults);
+          delete searchSuggestions.formHistoryResult;
+          this.app.broker.publish('popup::suggestedSearchResults', searchSuggestions);
+        }, (err) => {
+          Cu.reportError(err);
+          this.app.broker.publish('popup::autocompleteSearchResults', placesResults);
+          this.app.broker.publish('popup::suggestedSearchResults', []);
         });
       }
-    }
-    return results;
+    });
   },
-  _getSearchSuggestions: function() {
+  _getPlacesSuggestions: Task.async(function* () {
+    const searchTerm = this.app.gBrowser.userTypedValue;
+    return yield this.app.placesSearch.search(searchTerm);
+  }),
+  _getSearchSuggestions: Task.async(function* () {
     const controller = this.popup.mInput.controller;
 
     // it seems like Services.search.isInitialized is always true?
@@ -210,6 +177,6 @@ Popup.prototype = {
 
     const suggestions = searchController.fetch(searchTerm, this.inPrivateContext, engine);
     // returns a promise for the formatted results of the search suggestion engine
-    return suggestions;
-  }
+    return yield suggestions;
+  })
 };
