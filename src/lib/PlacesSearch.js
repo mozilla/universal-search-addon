@@ -31,7 +31,7 @@
 
 /* global Components, PlacesUtils, SessionStore, Task, XPCOMUtils */
 
-const {utils: Cu, interfaces: Ci} = Components;
+const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'console',
@@ -235,7 +235,17 @@ PlacesSearch.prototype = {
     }
     return yield processed;
   }),
-
+  // Warning: This function is Gecko copypasta.
+  // Taken from BookmarkHTMLUtils.jsm, hg revision 470f4f8c2b2d
+  base64EncodeString: function(str) {
+    const wrapped = String.fromCharCode.apply(String, str);
+    const stream = Cc['@mozilla.org/io/string-input-stream;1']
+                   .createInstance(Ci.nsIStringInputStream);
+    stream.setData(wrapped, wrapped.length);
+    const encoder = Cc['@mozilla.org/scriptablebase64encoder;1']
+                    .createInstance(Ci.nsIScriptableBase64Encoder);
+    return encoder.encodeToString(stream, wrapped.length);
+  },
   _processRow: Task.async(function* (row) {
     // Rows we are not including, because the front-end doesn't need them:
     //   queryType:  row.getResultByIndex(0), // see QUERY_TYPE docs above
@@ -279,7 +289,7 @@ PlacesSearch.prototype = {
       // converts it to an Error.
       const faviconData = yield PlacesUtils.promiseFaviconData(result.url);
       result.imageData = 'data:' + faviconData.mimeType + ';base64,' +
-                         btoa(faviconData.data);
+        this.base64EncodeString(faviconData.data);
     } catch (ex) {} // eslint-disable-line
 
     return yield result;
