@@ -47,9 +47,8 @@
       <method name="_invalidate">
         <body>
           <![CDATA[
-            // The inherited method calls _appendCurrentResult and recalculates
-            // the richlistbox height. Override, removing the XUL DOM code.
-            this._appendCurrentResult();
+            // Override inherited method, which appends results to the
+            // richlistbox, then recalculates the richlistbox's height.
           ]]>
         </body>
       </method>
@@ -79,19 +78,7 @@
       <method name="_appendCurrentResult">
         <body>
           <![CDATA[
-            // We want to override this method with a method that runs in
-            // the more predictable, documented, and familiar JS+DOM
-            // environment. Oddly, we'll do this DOM Level 0 style, in the
-            // lib/ui/Popup render method, by assigning
-            // browser._appendCurrentResult to a JS-defined method.
-            //
-            // Because we don't want to override the method in the superclass,
-            // which is also the parent of the form field autocomplete UI, we
-            // create an _appendCurrentResult on our subclass by creating an
-            // empty no-op method here, on the XBL side. (Clearly there is a
-            // kind of prototypal inheritance at work, though exactly how it
-            // works is poorly documented, and XBL itself is an unspecified
-            // language.)
+            // Override yet another method with a no-op.
           ]]>
         </body>
       </method>

@@ -31,8 +31,6 @@ function Transport(appGlobal) {
   this.port = null;
   // channelId must be unique to each window (#64)
   this.channelId = 'ohai-' + Math.floor(Math.random() * 100000);
-  this._lastAutocompleteSearchTerm = '';
-  this._lastSuggestedSearchTerm = '';
 }
 
 Transport.prototype = {
@@ -76,27 +74,10 @@ Transport.prototype = {
     if (id !== this.channelId) { return; }
     this.app.broker.publish('iframe::' + msg.type, msg.data);
   },
-  // Dedupe sequential messages if the user input hasn't changed. See #18 and
-  // associated commit message for gnarly details.
-  //
-  // Note, there is some duplication in the deduping logic in these two fns.
-  // However, I'm not sure the result of functional decomposition (extracting
-  // the dedupe function into a memoize-like combinator) would actually yield
-  // more understandable or readable code than what we've got here. :-\
   onAutocompleteSearchResults: function(msg) {
-    const currentInput = msg && msg.length && msg[0].text;
-    if (currentInput && currentInput === this._lastAutocompleteSearchTerm) {
-      return;
-    }
-    this._lastAutocompleteSearchTerm = currentInput;
     this.sendMessage('autocomplete-search-results', msg);
   },
   onSuggestedSearchResults: function(msg) {
-    const currentInput = msg && msg.term;
-    if (currentInput && currentInput === this._lastSuggestedSearchTerm) {
-      return;
-    }
-    this._lastSuggestedSearchTerm = currentInput;
     this.sendMessage('suggested-search-results', { results: msg });
   },
   onNavigationalKey: function(msg) {
