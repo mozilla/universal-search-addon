@@ -279,7 +279,7 @@ PlacesSearch.prototype = {
     // styling results. Not sure if we should keep it forever, but for now,
     // keep a simplified version of the logic.
     result.type = result.open ? 'action' :
-                    result.bookmarked ? 'bookmark' : 'favicon';
+                    result.bookmark ? 'bookmark' : 'favicon';
 
     // If the favicon image is in the browser cache, append it in data URI
     // Base64-encoded form, ready to be set as the src of an img element.
