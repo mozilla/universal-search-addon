@@ -231,7 +231,12 @@ PlacesSearch.prototype = {
     const processed = [];
     for (let i = 0, item; i < results.length; i++) {
       item = yield this._processRow(results[i]);
-      processed.push(item);
+      if (!this._isSearchResult(item)) {
+        processed.push(item);
+      } else {
+        // only keeping this branch of the conditional for quality testing
+        console.log('excluding a search result from the awesomebar: ', item.url);
+      }
     }
     return yield processed;
   }),
@@ -245,6 +250,50 @@ PlacesSearch.prototype = {
     const encoder = Cc['@mozilla.org/scriptablebase64encoder;1']
                     .createInstance(Ci.nsIScriptableBase64Encoder);
     return encoder.encodeToString(stream, wrapped.length);
+  },
+  // Search result pages pop up quite often in the SQL results, but they reduce
+  // the quality of the experience. This function filters out those urls.
+  //
+  // l10n TODO: This filter function will need to be localized when we expand
+  // beyond en-US.
+  _isSearchResult: function(result) {
+    // We exclude the scheme: some providers support both http and https.
+    const searchResultsRegexes = [
+      // Capture google.com/search and google.com/maps/search
+      /google\.com(.*)\/search/,
+      // Some google searches (not sure when/why) seem to take this form:
+      /google\.com\/\?q/,
+      // Google redirects users between results page and content page. Exclude
+      // those URLs, too. This happens for google.com/url as well as
+      // news.google.com/news/url.
+      /google\.com(.*)\/url\?/,
+      // Some image search result pages seem to have this form:
+      /google\.com\/imgres\?/,
+
+      // Match bing.com/search and bing.com/images/search, /videos/search, etc.
+      /bing\.com(.*)\/search/,
+      /search\.yahoo\.com/,
+
+      // This is just a guess. Need to look more carefully at DDG's blog, etc
+      /https:\/\/duckduckgo\.com\/\?q/,
+
+      // Wikipedia searches that start in FF and return no hits seem to land
+      // at this URL:
+      /wikipedia\.org\/wiki\/Special\:Search\?/,
+      // while Wikipedia searches that start in the wikipedia search bar, and
+      // return no hits, seem to wind up here:
+      /wikipedia\.org\/w\/index\.php\?search/,
+
+      // Amazon results feel more like a destination than web search results.
+      // But, let's try excluding them and see.
+      // Same story for ebay and twitter results.
+      /amazon\.com\/s\?/,
+      /ebay\.com\/sch\//,
+      /twitter\.com\/search\?/
+    ];
+    return searchResultsRegexes.some((r) => {
+      return r.test(result.url);
+    });
   },
   _processRow: Task.async(function* (row) {
     // Rows we are not including, because the front-end doesn't need them:
