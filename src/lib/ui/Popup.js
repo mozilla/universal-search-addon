@@ -50,14 +50,6 @@ Popup.prototype = {
     this.popupParent = oldPopup.parentElement;
     this.popupParent.appendChild(this.popup);
 
-    // XXX Wait till the XBL binding is applied, then override _appendCurrentResult.
-    //     This actually means we replace an XBL-defined method with one
-    //     defined in JS, which has some funny consequences. In particular,
-    //     XBL seems to invoke callbacks with the xpcshell BackstagePass object
-    //     as the global context, which is madness; .bind() restores sanity.
-    this._appendCurrentResult = Popup.prototype._appendCurrentResult.bind(this);
-    this.popup._appendCurrentResult = this._appendCurrentResult;
-
     // Once the popup is in the XUL DOM, we want to set its height to a default.
     // For now, using 303px, the number we've historically set via CSS. We
     // could easily set this default via a pref, too.
@@ -74,6 +66,8 @@ Popup.prototype = {
                                this.onAutocompleteURLClicked, this);
     this.app.broker.subscribe('iframe::adjust-height',
                                this.onAdjustHeight, this);
+    this.app.broker.subscribe('urlbar::printableKey',
+                               this.onPrintableKey, this);
 
     // XXX: The browser element is an anonymous XUL element created by XBL at
     //      an unpredictable time in the startup flow. We have to wait for the
@@ -157,45 +151,46 @@ Popup.prototype = {
     }
     this.app.broker.publish('popup::popupClose');
   },
-  _appendCurrentResult: function() {
-    this._getPlacesSuggestions().then((placesResults) => {
-      if (this.inPrivateContext) {
-        this.app.broker.publish('popup::autocompleteSearchResults', placesResults);
-        this.app.broker.publish('popup::suggestedSearchResults', []);
-      } else {
-        this._getSearchSuggestions().then((searchSuggestions) => {
-          this.app.broker.publish('popup::autocompleteSearchResults', placesResults);
-          delete searchSuggestions.formHistoryResult;
-          this.app.broker.publish('popup::suggestedSearchResults', searchSuggestions);
-        }, (err) => {
-          Cu.reportError(err);
-          this.app.broker.publish('popup::autocompleteSearchResults', placesResults);
-          this.app.broker.publish('popup::suggestedSearchResults', []);
-        });
+  onPrintableKey: function(data) {
+    const searchTerm = data.query;
+
+    Promise.all([
+      this._getPlacesSuggestions(searchTerm),
+      this._getSearchSuggestions(searchTerm)
+    ]).then((results) => {
+      const placesResults = results[0];
+      const searchSuggestions = results[1];
+      this.app.broker.publish('popup::autocompleteSearchResults', placesResults);
+      if (searchSuggestions) {
+        delete searchSuggestions.formHistoryResult;
       }
+      this.app.broker.publish('popup::suggestedSearchResults', searchSuggestions);
+    }, (err) => {
+      Cu.reportError(err);
     });
   },
-  _getPlacesSuggestions: Task.async(function* () {
-    const searchTerm = this.app.gBrowser.userTypedValue;
+  _getPlacesSuggestions: Task.async(function* (searchTerm) {
     return yield this.app.placesSearch.search(searchTerm);
   }),
-  _getSearchSuggestions: Task.async(function* () {
-    const controller = this.popup.mInput.controller;
-
-    // it seems like Services.search.isInitialized is always true?
-    if (!Services.search.isInitialized) {
-      return;
-    }
+  _getSearchSuggestions: Task.async(function* (searchTerm) {
+    // Search-related constants; see SearchSuggestionController.jsm for more.
     const MAX_LOCAL_SUGGESTIONS = 3;
     const MAX_SUGGESTIONS = 6;
-    const REMOTE_TIMEOUT = 500; // same timeout as in SearchSuggestionController.jsm
+    const REMOTE_TIMEOUT = 500;
 
-    // searchTerm is the same thing as the 'text' item sent down in each result.
-    // maybe that's not a useful place to put the search term...
-    const searchTerm = controller.searchString.trim();
+    // If we need to bail early for any reason, return an empty object that
+    // fits the API format.
+    let suggestions = {
+      term: searchTerm,
+      local: [],
+      remote: []
+    };
 
-    // unfortunately, the controller wants to do some UI twiddling.
-    // and we don't have any UI to give it. so it barfs.
+    // Quit immediately if we're in a private window.
+    if (this.inPrivateContext) {
+      return yield suggestions;
+    }
+
     const searchController = new SearchSuggestionController();
     const engine = Services.search.currentEngine;
     const ok = SearchSuggestionController.engineOffersSuggestions(engine);
@@ -204,8 +199,18 @@ Popup.prototype = {
     searchController.maxRemoteResults = ok ? MAX_SUGGESTIONS : 0;
     searchController.remoteTimeout = REMOTE_TIMEOUT;
 
-    const suggestions = searchController.fetch(searchTerm, this.inPrivateContext, engine);
-    // returns a promise for the formatted results of the search suggestion engine
+    // Sometimes the search suggestion service will stubbornly return 403s,
+    // perhaps mistaking the user for a bot? Or due to FF profile corruption?
+    // Regardless of the source, since we're using Promise.all, we need to
+    // avoid rejecting due to routine suggestion provider errors: otherwise, we
+    // will also reject the places results. So, just return an empty result if
+    // something goes wrong.
+    try {
+      suggestions = yield searchController.fetch(searchTerm, this.inPrivateContext, engine);
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+
     return yield suggestions;
   })
 };
