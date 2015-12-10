@@ -101,7 +101,9 @@ Transport.prototype = {
       data: data || null
     };
     // Super helpful for debugging:
-    // console.log('sending the ' + evt + ' message to content:' + JSON.stringify(msg));
+    try {
+      console.log('sending the ' + evt + ' message to content:' + JSON.stringify(msg));
+    } catch (ex) {} // eslint-disable-line
     const ctx = {
       browser: this.app.browser,
       principal: Cc['@mozilla.org/systemprincipal;1']
