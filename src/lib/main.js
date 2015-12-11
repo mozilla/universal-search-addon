@@ -4,7 +4,7 @@
 //       figure out when and how to cache-bust.
 //       bugs 918033, 1051238, 719376
 
-/* global Components, CustomizableUI, Services, XPCOMUtils */
+/* global Components, CustomizableUI, PlacesUtils, Services, XPCOMUtils */
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
@@ -37,7 +37,7 @@ function scrapePage(browser) {
   // when the timeout is done, scrape. browser-thumbnails.js does this.
   // readermode might, too.
   console.log('detected a tab loaded with url ', browser._contentWindow.document.URL);
-  let doc = browser._contentWindow.document;
+  const doc = browser._contentWindow.document;
 
   // ok. start with the low hanging fruit, grabbing everything out of the DOM.
   // TODO: later, be smart; don't naively try to grab all these tags.
@@ -45,7 +45,7 @@ function scrapePage(browser) {
   // using stuff like PageThumbs and ReaderMode
 
   function get(selector) {
-    let el = doc.querySelector(selector);
+    const el = doc.querySelector(selector);
     return el && el.getAttribute('content');
   }
 
@@ -76,11 +76,11 @@ function scrapePage(browser) {
   };
 
   // hopefully we have an image; otherwise, give up, I guess
-  let imgUrl = data.og.img.url || data.tw.img.url;
+  const imgUrl = data.og.img.url || data.tw.img.url;
   if (imgUrl) {
     const maxHeight = 100;
-    let img = doc.createElement('img');
-    let canvas = doc.createElement('canvas');
+    const img = doc.createElement('img');
+    const canvas = doc.createElement('canvas');
     img.onload = () => {
       // now we've got an image; scale it down, convert it into data, and then we'll save it.
       // TODO arbitrarily using 100px max height as our boundary. we'll get fancier later.
@@ -91,13 +91,13 @@ function scrapePage(browser) {
         canvas.height = img.naturalHeight;
         canvas.width = img.naturalWidth;
       }
-      var ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
       // fun fact: canvas.toDataURL is perhaps the best thing ever invented: it sniffs the
       // mime type of the image for us, and tacks it onto the front of the data uri as you'd hope
-      let dataUri = canvas.toDataURL();
-      let annos = [{
+      const dataUri = canvas.toDataURL();
+      const annos = [{
         name: 'LOLZERS/imgDataUri',
         value: dataUri,
         expires: Ci.nsIAnnotationService.EXPIRE_WITH_HISTORY

@@ -344,7 +344,7 @@ PlacesSearch.prototype = {
     } catch (ex) {} // eslint-disable-line
 
     // include fancy metadata (description or nice image), if we have them
-    let annos = PlacesUtils.getAnnotationsForURI(Services.io.newURI(result.url, null,null));
+    const annos = PlacesUtils.getAnnotationsForURI(Services.io.newURI(result.url, null,null));
     annos.forEach((anno) => {
       if (anno.name === 'LOLZERS/imgDataUri') {
         result.fancyImageData = anno.value;
