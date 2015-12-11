@@ -33,6 +33,49 @@ function scrapePage(browser) {
   // when the timeout is done, scrape. browser-thumbnails.js does this.
   // readermode might, too.
   console.log('detected a tab loaded with url ', browser._contentWindow.document.URL);
+  let doc = browser._contentWindow.document;
+
+  // ok. start with the low hanging fruit, grabbing everything out of the DOM.
+  // TODO: later, be smart; don't naively try to grab all these tags.
+  // TODO: also later, if we didn't get any images, attempt to scrape ourselves,
+  // using stuff like PageThumbs and ReaderMode
+
+  function get(selector) {
+    let el = doc.querySelector(selector);
+    return el && el.getAttribute('content');
+  }
+
+  const data = {
+    // grab opengraph metadata, if we have it
+    og: {
+      desc: get('meta[property="og:description"]'),
+      img: {
+        url: get('meta[property="og:image"]'),
+        type: get('meta[property="og:image:type"]')
+      },
+      siteName: get('meta[property="og:site_name"]'),
+      title: get('meta[property="og:title"]'),
+      type: get('meta[property="og:type"]')
+    },
+    // grab twitter data, if we have it
+    tw: {
+      desc: get('meta[property="twitter:description"]'),
+      img: {
+        url: get('meta[property="twitter:image"]')
+      },
+      // note, this'll be a twitter username, like '@foo', not a site name, but whatever
+      siteName: get('meta[property="twitter:site"]'),
+      title: get('meta[property="twitter:title"]'),
+      // and this'll be a twitter card, slightly different types vs og
+      type: get('meta[property="twitter:card"]')
+    }
+  };
+
+  // hopefully we have an image; otherwise, give up, I guess
+  let imgUrl = data.og.img.url || data.tw.img.url;
+  if (imgUrl) {
+    // TODO NEXT: grab and save the image 
+  }
 }
 
 // leaning on browser/base/content/browser-thumbnails.js onStateChange method here
