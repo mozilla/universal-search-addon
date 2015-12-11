@@ -29,7 +29,7 @@
 //   This corresponds to BOOKMARKED_HOST_QUERY and related constants in the
 //   existing code.
 
-/* global Components, PlacesUtils, SessionStore, Task, XPCOMUtils */
+/* global Components, PlacesUtils, Services, SessionStore, Task, XPCOMUtils */
 
 const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
 
@@ -38,6 +38,8 @@ XPCOMUtils.defineLazyModuleGetter(this, 'console',
   'resource://gre/modules/devtools/Console.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'PlacesUtils',
   'resource://gre/modules/PlacesUtils.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'Services',
+  'resource://gre/modules/Services.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'SessionStore',
   'resource:///modules/sessionstore/SessionStore.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'Task',
@@ -340,6 +342,16 @@ PlacesSearch.prototype = {
       result.imageData = 'data:' + faviconData.mimeType + ';base64,' +
         this.base64EncodeString(faviconData.data);
     } catch (ex) {} // eslint-disable-line
+
+    // include fancy metadata (description or nice image), if we have them
+    let annos = PlacesUtils.getAnnotationsForURI(Services.io.newURI(result.url, null,null));
+    annos.forEach((anno) => {
+      if (anno.name === 'LOLZERS/imgDataUri') {
+        result.fancyImageData = anno.value;
+      } else if (anno.name === 'LOLZERS/description') {
+        result.description = anno.value;
+      }
+    });
 
     return yield result;
   }),
