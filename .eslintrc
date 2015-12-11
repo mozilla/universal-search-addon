@@ -1,7 +1,5 @@
-extends: universal-search
+extends: universal-search/addon
 
 rules:
-  consistent-return: 0
   no-console: 0
-  no-var: 2
-  prefer-const: 2
+  func-names: 0

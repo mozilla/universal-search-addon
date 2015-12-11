@@ -201,7 +201,6 @@ const loadIntoWindow = function(win) {
   app.gBrowser.tabContainer.addEventListener('TabSelect', onTabSelect);
   app.gBrowser.tabContainer.addEventListener('TabOpen', onTabOpen);
   app.gBrowser.tabContainer.addEventListener('TabClose', onTabClose);
-
 };
 
 // basically reverse the loadIntoWindow function
