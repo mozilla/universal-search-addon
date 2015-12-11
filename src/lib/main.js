@@ -74,7 +74,27 @@ function scrapePage(browser) {
   // hopefully we have an image; otherwise, give up, I guess
   let imgUrl = data.og.img.url || data.tw.img.url;
   if (imgUrl) {
-    // TODO NEXT: grab and save the image 
+    const maxHeight = 100;
+    let img = doc.createElement('img');
+    let canvas = doc.createElement('canvas');
+    img.onload = (e) => {
+      // now we've got an image; scale it down, convert it into data, and then we'll save it.
+      if (img.naturalHeight > maxHeight) {
+        canvas.height = maxHeight;
+        canvas.width = img.naturalWidth * (maxHeight / img.naturalHeight);
+      } else {
+        canvas.height = img.naturalHeight;
+        canvas.width = img.naturalWidth;
+      }
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => {
+        // now we've got the blob; save it, along with the other data.
+        console.log('so, the url was ', imgUrl);
+        console.log('and we got a blob: ', blob);
+      });
+    };
+    img.src = imgUrl;
   }
 }
 
