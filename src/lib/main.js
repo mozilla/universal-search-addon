@@ -24,8 +24,38 @@ const onTabSelect = function() { console.log('onTabSelect'); };
 const onTabOpen = function() { console.log('onTabOpen'); };
 const onTabClose = function() { console.log('onTabClose'); };
 
+let isTabListening = false;
+
+function scrapePage(browser) {
+  // do stuff!
+  // existing code seems to set a timeout, then if the user scrolls,
+  // bump the timeout. if the user closes the tab, abort.
+  // when the timeout is done, scrape. browser-thumbnails.js does this.
+  // readermode might, too.
+  console.log('detected a tab loaded with url ', browser._contentWindow.document.URL);
+}
+
+// leaning on browser/base/content/browser-thumbnails.js onStateChange method here
+const myProgressListener = {
+  onStateChange: function (browser, progress, request, flags, status) {
+    if (flags & Ci.nsIWebProgressListener.STATE_STOP &&
+        flags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
+      scrapePage(browser);
+    }
+  }
+};
+
 const loadIntoWindow = function(win) {
   console.log('loadIntoWindow start');
+
+  if (!isTabListening) {
+    // only do this once per firefox.
+    isTabListening = true;
+
+    // listen for all dom windows and do special stuff there.
+    console.log('just inside load method, does gBrowser exist?', win.gBrowser);
+    win.gBrowser.addTabsProgressListener(myProgressListener);
+  }
 
   const document = win.document;
 
@@ -94,6 +124,14 @@ const loadIntoWindow = function(win) {
 // basically reverse the loadIntoWindow function
 const unloadFromWindow = function(win) {
   console.log('unloadFromWindow start');
+
+  // if we're unloading, then we can remove our gBrowser listener.
+  if (isTabListening) {
+    // only do this once per firefox.
+    isTabListening = false;
+
+    win.gBrowser.removeTabsProgressListener(myProgressListener);
+  }
 
   const app = win.US;
 
