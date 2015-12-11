@@ -17,6 +17,10 @@ XPCOMUtils.defineLazyModuleGetter(this, 'console',
   'resource://gre/modules/devtools/Console.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'CustomizableUI',
   'resource:///modules/CustomizableUI.jsm');
+Cu.import('resource://gre/modules/PlacesUtils.jsm');
+// TODO: doing the synchronous import because I got a PlacesUtils reference error.
+//XPCOMUtils.defineLazyModuleGetter(this, 'PlacesUtils',
+  //'resource:///gre/modules/PlacesUtils.jsm');
 
 const EXPORTED_SYMBOLS = ['Main']; // eslint-disable-line no-unused-vars
 
@@ -50,8 +54,8 @@ function scrapePage(browser) {
     og: {
       desc: get('meta[property="og:description"]'),
       img: {
-        url: get('meta[property="og:image"]'),
-        type: get('meta[property="og:image:type"]')
+        url: get('meta[property="og:image"]')
+        // we don't need to sweat the mime type; canvas.toDataURI has our back
       },
       siteName: get('meta[property="og:site_name"]'),
       title: get('meta[property="og:title"]'),
@@ -77,8 +81,9 @@ function scrapePage(browser) {
     const maxHeight = 100;
     let img = doc.createElement('img');
     let canvas = doc.createElement('canvas');
-    img.onload = (e) => {
+    img.onload = () => {
       // now we've got an image; scale it down, convert it into data, and then we'll save it.
+      // TODO arbitrarily using 100px max height as our boundary. we'll get fancier later.
       if (img.naturalHeight > maxHeight) {
         canvas.height = maxHeight;
         canvas.width = img.naturalWidth * (maxHeight / img.naturalHeight);
@@ -88,11 +93,26 @@ function scrapePage(browser) {
       }
       var ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob((blob) => {
-        // now we've got the blob; save it, along with the other data.
-        console.log('so, the url was ', imgUrl);
-        console.log('and we got a blob: ', blob);
-      });
+
+      // fun fact: canvas.toDataURL is perhaps the best thing ever invented: it sniffs the
+      // mime type of the image for us, and tacks it onto the front of the data uri as you'd hope
+      let dataUri = canvas.toDataURL();
+      let annos = [{
+        name: 'LOLZERS/imgDataUri',
+        value: dataUri,
+        expires: Ci.nsIAnnotationService.EXPIRE_WITH_HISTORY
+      }, {
+      // just as a further proof of concept, let's save the description, too
+        name: 'LOLZERS/description',
+        value: data.og.desc || data.tw.desc || '',
+        expires: Ci.nsIAnnotationService.EXPIRE_WITH_HISTORY
+      }];
+
+      try {
+        PlacesUtils.setAnnotationsForURI(Services.io.newURI(doc.URL, null, null), annos);
+      } catch (ex) {
+        console.error('saving annotations failed:',ex);
+      }
     };
     img.src = imgUrl;
   }
