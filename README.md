@@ -7,8 +7,6 @@ Universal Search desktop experiments in addon format
 
 ## Developer setup
 
-
-
 ### Basic addon environment
 These steps come from the [extension dev page](https://developer.mozilla.org/en-US/Add-ons/Setting_up_extension_development_environment) on MDN. Look there for lots more detail.
 
@@ -30,15 +28,26 @@ These steps come from the [extension dev page](https://developer.mozilla.org/en-
     - `-purgecaches` stops FF from caching files, so you can instantly (?) see changes
 
 ### Setup specific to this addon
-1. If you're hacking on the [iframe](https://github.com/mozilla/universal-search-content), then configure your profile to use a local copy:
-  - Run `gulp gen-prefs`
-    - creates a file named `user.js`
-    - move this file to your Firefox profile directory, e.g. `/path/to/ff/Profiles/6h6ygzlo.addon-dev/user.js`
-1. The first time you use a local iframe, you'll probably be serving it from `https://localhost:8080/`. You will get a security warning, it'll look something like this: ![](https://www.dropbox.com/s/9ieyvpimtfkmqo4/Screenshot%202015-07-21%2014.52.10.png?dl=0&raw=true)
-To work around this:
+
+By default, the addon connects to an iframe hosted at `https://d1fnkpeapwua2i.cloudfront.net`. If you're not planning to make changes to the iframe, which contains the visible UI contents of the awesomebar dropdown, then you're done with setup.
+
+If you are interested in hacking on the [iframe](https://github.com/mozilla/universal-search-content), then you'll need to [clone and set up the iframe repo](https://github.com/mozilla/universal-search-content/blob/master/README.md), add a few prefs to your profile, and accept a self-signed SSL cert:
+  - Surf to `about:config` and add two string prefs (right click in the page, then choose New -> String, see [this SUMO page](https://support.mozilla.org/en-US/kb/about-config-editor-firefox) for detailed screenshots):
+    - Create a pref called `services.universalSearch.frameURL`, with a value of `https://localhost:8080/index.html`
+    - Create another pref called `services.universalSearch.baseURL`, with a value of `https://localhost:8080/`
+  - The first time you use a local iframe, you'll probably be serving it from `https://localhost:8080/`. You will get a security warning, it'll look something like this: ![](https://www.dropbox.com/s/9ieyvpimtfkmqo4/Screenshot%202015-07-21%2014.52.10.png?dl=0&raw=true)
+To work around the security warning, try the following:
   - Surf to the iframe URL (**the enter key won't work**. You will have to click the Go Button, the little right arrow at the edge of the address bar)
   - Once you load the page, add a security exception for the self-signed cert provided by the local content server.
-1. Restart the browser, and you're in business.
+  - Restart the browser, and you should see the iframe contents without problems.
+
+### That's it!
+
+You now have the code working locally. Any addon code changes should be visible after restarting your browser. If you have a local copy of the iframe, any iframe changes will be visible when you open a new browser window (we reload the iframe each time a new window is opened).
+
+Next, take a look at our [contributing docs](https://github.com/mozilla/universal-search-addon/blob/master/CONTRIBUTING.md), which explain our dev process and our project's code of conduct.
+
+Finally, please file an issue on Github if you ran into problems with these setup docs, or think they could be improved. Pull requests with improvements are even better ^_^
 
 ## Release process:
   1. Use one of the following commands to bump the package.json version number and create an XPI:
