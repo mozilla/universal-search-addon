@@ -4,7 +4,7 @@
 
 /* global Components, PrivateBrowsingUtils, Services, XPCOMUtils */
 
-const {utils: Cu} = Components;
+const { utils: Cu } = Components;
 
 const EXPORTED_SYMBOLS = ['Urlbar']; // eslint-disable-line no-unused-vars
 
@@ -167,13 +167,13 @@ Urlbar.prototype = {
   },
   handleEvent: function(evt) {
     const handlers = {
-      'focus': this.onFocus,
-      'blur': this.onBlur,
-      'keydown': this.onKeyDown,
-      'keypress': this.onKeyPress,
-      'mousedown': this.onMouseDown,
-      'paste': this.onPaste,
-      'drop': this.onDrop
+      focus: this.onFocus,
+      blur: this.onBlur,
+      keydown: this.onKeyDown,
+      keypress: this.onKeyPress,
+      mousedown: this.onMouseDown,
+      paste: this.onPaste,
+      drop: this.onDrop
     };
     if (evt.type in handlers) {
       handlers[evt.type].call(this, evt);

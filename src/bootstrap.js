@@ -3,7 +3,7 @@
 /* global APP_SHUTDOWN, ADDON_DISABLE, ADDON_UNINSTALL, Components, Main,
           XPCOMUtils */
 
-const {utils: Cu} = Components;
+const { utils: Cu } = Components;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'Main',

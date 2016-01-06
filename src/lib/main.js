@@ -6,7 +6,7 @@
 
 /* global Components, CustomizableUI, Services, XPCOMUtils */
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'Services',
@@ -31,7 +31,7 @@ const loadIntoWindow = function(win) {
 
   // set the app global per-window
   if (win.US === undefined) {
-    Object.defineProperty(win, 'US', {configurable: true, value: {}});
+    Object.defineProperty(win, 'US', { configurable: true, value: {} });
   } else {
     win.US = win.US || {};
   }
@@ -88,7 +88,6 @@ const loadIntoWindow = function(win) {
   app.gBrowser.tabContainer.addEventListener('TabSelect', onTabSelect);
   app.gBrowser.tabContainer.addEventListener('TabOpen', onTabOpen);
   app.gBrowser.tabContainer.addEventListener('TabClose', onTabClose);
-
 };
 
 // basically reverse the loadIntoWindow function

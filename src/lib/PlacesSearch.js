@@ -31,7 +31,7 @@
 
 /* global Components, PlacesUtils, SessionStore, Task, XPCOMUtils */
 
-const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
+const { utils: Cu, interfaces: Ci, classes: Cc } = Components;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'console',
@@ -302,12 +302,12 @@ PlacesSearch.prototype = {
     //   id:         row.getResultByIndex(9), // moz_places URL id
     //   typed:      !!row.getResultByIndex(8), // was it typed by the user
     const result = {
-      url:        row.getResultByIndex(1),
-      title:      row.getResultByIndex(2),
+      url: row.getResultByIndex(1),
+      title: row.getResultByIndex(2),
       // 'image' is the favicon url; we separately send the favicon file
       // if it's found in the cache.
       image: row.getResultByIndex(3),
-      frecency:   row.getResultByIndex(10)
+      frecency: row.getResultByIndex(10)
     };
 
     // If the page is bookmarked, append a bookmark object to the result.

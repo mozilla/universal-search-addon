@@ -7,7 +7,7 @@
 
 /* global Components, Services, WebChannel, XPCOMUtils */
 
-const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
+const { utils: Cu, interfaces: Ci, classes: Cc } = Components;
 
 const EXPORTED_SYMBOLS = ['Transport']; // eslint-disable-line no-unused-vars
 
