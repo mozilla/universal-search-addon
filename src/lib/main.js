@@ -4,7 +4,7 @@
 //       figure out when and how to cache-bust.
 //       bugs 918033, 1051238, 719376
 
-/* global Components, CustomizableUI, PlacesUtils, Services, XPCOMUtils */
+/* global Components, CustomizableUI, Services, XPCOMUtils */
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
@@ -17,10 +17,6 @@ XPCOMUtils.defineLazyModuleGetter(this, 'console',
   'resource://gre/modules/devtools/Console.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'CustomizableUI',
   'resource:///modules/CustomizableUI.jsm');
-Cu.import('resource://gre/modules/PlacesUtils.jsm');
-// TODO: doing the synchronous import because I got a PlacesUtils reference error.
-//XPCOMUtils.defineLazyModuleGetter(this, 'PlacesUtils',
-  //'resource:///gre/modules/PlacesUtils.jsm');
 
 const EXPORTED_SYMBOLS = ['Main']; // eslint-disable-line no-unused-vars
 
@@ -28,117 +24,8 @@ const onTabSelect = function() { console.log('onTabSelect'); };
 const onTabOpen = function() { console.log('onTabOpen'); };
 const onTabClose = function() { console.log('onTabClose'); };
 
-let isTabListening = false;
-
-function scrapePage(browser) {
-  // do stuff!
-  // existing code seems to set a timeout, then if the user scrolls,
-  // bump the timeout. if the user closes the tab, abort.
-  // when the timeout is done, scrape. browser-thumbnails.js does this.
-  // readermode might, too.
-  console.log('detected a tab loaded with url ', browser._contentWindow.document.URL);
-  const doc = browser._contentWindow.document;
-
-  // ok. start with the low hanging fruit, grabbing everything out of the DOM.
-  // TODO: later, be smart; don't naively try to grab all these tags.
-  // TODO: also later, if we didn't get any images, attempt to scrape ourselves,
-  // using stuff like PageThumbs and ReaderMode
-
-  function get(selector) {
-    const el = doc.querySelector(selector);
-    return el && el.getAttribute('content');
-  }
-
-  const data = {
-    // grab opengraph metadata, if we have it
-    og: {
-      desc: get('meta[property="og:description"]'),
-      img: {
-        url: get('meta[property="og:image"]')
-        // we don't need to sweat the mime type; canvas.toDataURI has our back
-      },
-      siteName: get('meta[property="og:site_name"]'),
-      title: get('meta[property="og:title"]'),
-      type: get('meta[property="og:type"]')
-    },
-    // grab twitter data, if we have it
-    tw: {
-      desc: get('meta[property="twitter:description"]'),
-      img: {
-        url: get('meta[property="twitter:image"]')
-      },
-      // note, this'll be a twitter username, like '@foo', not a site name, but whatever
-      siteName: get('meta[property="twitter:site"]'),
-      title: get('meta[property="twitter:title"]'),
-      // and this'll be a twitter card, slightly different types vs og
-      type: get('meta[property="twitter:card"]')
-    }
-  };
-
-  // hopefully we have an image; otherwise, give up, I guess
-  const imgUrl = data.og.img.url || data.tw.img.url;
-  if (imgUrl) {
-    const maxHeight = 100;
-    const img = doc.createElement('img');
-    const canvas = doc.createElement('canvas');
-    img.onload = () => {
-      // now we've got an image; scale it down, convert it into data, and then we'll save it.
-      // TODO arbitrarily using 100px max height as our boundary. we'll get fancier later.
-      if (img.naturalHeight > maxHeight) {
-        canvas.height = maxHeight;
-        canvas.width = img.naturalWidth * (maxHeight / img.naturalHeight);
-      } else {
-        canvas.height = img.naturalHeight;
-        canvas.width = img.naturalWidth;
-      }
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-      // fun fact: canvas.toDataURL is perhaps the best thing ever invented: it sniffs the
-      // mime type of the image for us, and tacks it onto the front of the data uri as you'd hope
-      const dataUri = canvas.toDataURL();
-      const annos = [{
-        name: 'LOLZERS/imgDataUri',
-        value: dataUri,
-        expires: Ci.nsIAnnotationService.EXPIRE_WITH_HISTORY
-      }, {
-      // just as a further proof of concept, let's save the description, too
-        name: 'LOLZERS/description',
-        value: data.og.desc || data.tw.desc || '',
-        expires: Ci.nsIAnnotationService.EXPIRE_WITH_HISTORY
-      }];
-
-      try {
-        PlacesUtils.setAnnotationsForURI(Services.io.newURI(doc.URL, null, null), annos);
-      } catch (ex) {
-        console.error('saving annotations failed:',ex);
-      }
-    };
-    img.src = imgUrl;
-  }
-}
-
-// leaning on browser/base/content/browser-thumbnails.js onStateChange method here
-const myProgressListener = {
-  onStateChange: function (browser, progress, request, flags, status) {
-    if (flags & Ci.nsIWebProgressListener.STATE_STOP &&
-        flags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
-      scrapePage(browser);
-    }
-  }
-};
-
 const loadIntoWindow = function(win) {
   console.log('loadIntoWindow start');
-
-  if (!isTabListening) {
-    // only do this once per firefox.
-    isTabListening = true;
-
-    // listen for all dom windows and do special stuff there.
-    console.log('just inside load method, does gBrowser exist?', win.gBrowser);
-    win.gBrowser.addTabsProgressListener(myProgressListener);
-  }
 
   const document = win.document;
 
@@ -207,14 +94,6 @@ const loadIntoWindow = function(win) {
 // basically reverse the loadIntoWindow function
 const unloadFromWindow = function(win) {
   console.log('unloadFromWindow start');
-
-  // if we're unloading, then we can remove our gBrowser listener.
-  if (isTabListening) {
-    // only do this once per firefox.
-    isTabListening = false;
-
-    win.gBrowser.removeTabsProgressListener(myProgressListener);
-  }
 
   const app = win.US;
 

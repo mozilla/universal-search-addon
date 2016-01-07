@@ -54,10 +54,6 @@ result:
     tags: user-created tags, if any, for the bookmarked page
   }
   text: the search term in the address bar
-  fancyImageData: if we found a good image in the page, this is it as Base64
-                  data uri (or null)
-  description: if we found an opengraph or twitter description in the page,
-               it's passed as this key (or it'll be null)
 }
 ```
 
