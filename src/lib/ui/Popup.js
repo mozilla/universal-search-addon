@@ -5,7 +5,7 @@
 /* global Components, PrivateBrowsingUtils, SearchSuggestionController,
           Services, Task, XPCOMUtils */
 
-const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
+const { utils: Cu, interfaces: Ci, classes: Cc } = Components;
 
 const EXPORTED_SYMBOLS = ['Popup']; // eslint-disable-line no-unused-vars
 
@@ -108,8 +108,8 @@ Popup.prototype = {
   },
   handleEvent: function(evt) {
     const handlers = {
-      'popuphiding': this.onPopupHiding,
-      'popupshowing': this.onPopupShowing
+      popuphiding: this.onPopupHiding,
+      popupshowing: this.onPopupShowing
     };
     if (evt.type in handlers) {
       handlers[evt.type].call(this, evt);

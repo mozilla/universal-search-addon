@@ -1,7 +1,12 @@
-extends: universal-search
+extends: universal-search/addon
+
+ecmaFeatures:
+  generators: true
 
 rules:
-  consistent-return: 0
+  func-names: 0
   no-console: 0
-  no-var: 2
-  prefer-const: 2
+  no-nested-ternary: 1
+  no-param-reassign: 1
+  object-shorthand: 0
+  space-before-function-paren: [2, never]
